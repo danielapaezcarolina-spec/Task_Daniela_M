@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTasks } from "@/context/task-context";
-import { CompleteTaskDialog } from "@/components/popups/complete-task-dialog";
+import { TaskActionDialog } from "@/components/popups/task-action-dialog";
 import {
   X,
   Sun,
@@ -18,20 +18,20 @@ import { cn } from "@/lib/utils";
 import type { Task } from "@/lib/mock-data";
 
 const priorityStyles: Record<string, string> = {
-  high: "bg-red-50 border-red-100",
-  medium: "bg-amber-50 border-amber-100",
-  low: "bg-emerald-50 border-emerald-100",
+  high: "bg-violet-100 border-violet-200",
+  medium: "bg-violet-50 border-violet-100",
+  low: "bg-violet-50/50 border-violet-100/50",
 };
 
 const priorityDot: Record<string, string> = {
-  high: "bg-red-400",
-  medium: "bg-amber-400",
-  low: "bg-emerald-400",
+  high: "bg-violet-500",
+  medium: "bg-violet-400",
+  low: "bg-violet-300",
 };
 
 const statusIcons = {
-  todo: { icon: Circle, color: "text-gray-300" },
-  in_progress: { icon: Loader2, color: "text-blue-400" },
+  todo: { icon: Circle, color: "text-violet-300" },
+  in_progress: { icon: Loader2, color: "text-violet-500" },
   done: { icon: CheckCircle2, color: "text-emerald-400" },
 };
 
@@ -42,7 +42,7 @@ interface DailyTasksPopupProps {
 
 export function DailyTasksPopup({ open, onClose }: DailyTasksPopupProps) {
   const router = useRouter();
-  const { tasks, completeTask } = useTasks();
+  const { tasks, updateTaskStatus, addObservation, updateTask } = useTasks();
   const [visible, setVisible] = useState(false);
   const [taskToComplete, setTaskToComplete] = useState<Task | null>(null);
 
@@ -84,8 +84,8 @@ export function DailyTasksPopup({ open, onClose }: DailyTasksPopupProps) {
     }
   };
 
-  const handleConfirm = (taskId: string, comment: string) => {
-    completeTask(taskId, comment);
+  const handleChangeStatus = (taskId: string, status: Task["status"], obs?: string) => {
+    updateTaskStatus(taskId, status, obs);
     setTaskToComplete(null);
   };
 
@@ -140,9 +140,9 @@ export function DailyTasksPopup({ open, onClose }: DailyTasksPopupProps) {
                 <p className="text-[11px] text-white/50">Tareas hoy</p>
               </div>
               {urgentCount > 0 && (
-                <div className="flex items-center gap-1.5 bg-red-500/20 px-3 py-1 rounded-full">
-                  <AlertCircle className="h-3.5 w-3.5 text-red-300" />
-                  <span className="text-xs font-medium text-red-200">{urgentCount} urgente{urgentCount > 1 ? "s" : ""}</span>
+                <div className="flex items-center gap-1.5 bg-white/20 px-3 py-1 rounded-full">
+                  <AlertCircle className="h-3.5 w-3.5 text-white/70" />
+                  <span className="text-xs font-medium text-white/80">{urgentCount} urgente{urgentCount > 1 ? "s" : ""}</span>
                 </div>
               )}
             </div>
@@ -193,7 +193,7 @@ export function DailyTasksPopup({ open, onClose }: DailyTasksPopupProps) {
                             <p className="text-sm font-semibold text-foreground leading-tight">
                               {task.title}
                             </p>
-                            <ArrowRight className="h-4 w-4 text-muted-foreground/30 group-hover:text-violet-500 group-hover:translate-x-0.5 transition-all shrink-0 mt-0.5" />
+                            <ArrowRight className="h-4 w-4 text-muted-foreground/30 group-hover:text-violet-400 group-hover:translate-x-0.5 transition-all shrink-0 mt-0.5" />
                           </div>
                           <p className="text-[11px] text-muted-foreground mt-0.5">
                             {task.companyName}
@@ -230,11 +230,19 @@ export function DailyTasksPopup({ open, onClose }: DailyTasksPopupProps) {
         </div>
       </div>
 
-      <CompleteTaskDialog
+      <TaskActionDialog
         task={taskToComplete}
         open={!!taskToComplete}
         onClose={() => setTaskToComplete(null)}
-        onConfirm={handleConfirm}
+        onChangeStatus={handleChangeStatus}
+        onAddObservation={(taskId, text) => {
+          addObservation(taskId, text);
+          setTaskToComplete(null);
+        }}
+        onEditTask={(taskId, updates) => {
+          updateTask(taskId, updates);
+          setTaskToComplete(null);
+        }}
       />
     </>
   );

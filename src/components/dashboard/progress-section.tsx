@@ -5,9 +5,9 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 
 const companyAvatars = [
-  { initials: "AB", color: "bg-orange-100 text-orange-700" },
-  { initials: "EF", color: "bg-red-100 text-red-700" },
-  { initials: "SD", color: "bg-emerald-100 text-emerald-700" },
+  { initials: "AB", color: "bg-violet-100 text-violet-700" },
+  { initials: "EF", color: "bg-violet-100 text-violet-700" },
+  { initials: "SD", color: "bg-violet-100 text-violet-700" },
   { initials: "GM", color: "bg-violet-100 text-violet-700" },
 ];
 

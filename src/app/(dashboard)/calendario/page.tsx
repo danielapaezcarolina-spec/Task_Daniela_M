@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTasks } from "@/context/task-context";
-import { CompleteTaskDialog } from "@/components/popups/complete-task-dialog";
+import { TaskActionDialog } from "@/components/popups/task-action-dialog";
 import type { Task } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,19 +29,19 @@ function getFirstDayOfMonth(year: number, month: number) {
 }
 
 const priorityDot: Record<string, string> = {
-  high: "bg-red-400",
-  medium: "bg-amber-400",
-  low: "bg-emerald-400",
+  high: "bg-violet-600",
+  medium: "bg-violet-400",
+  low: "bg-violet-300",
 };
 
 const statusIcon: Record<string, { icon: typeof Circle; color: string }> = {
-  todo: { icon: Circle, color: "text-gray-300" },
-  in_progress: { icon: Loader2, color: "text-blue-400" },
+  todo: { icon: Circle, color: "text-violet-300" },
+  in_progress: { icon: Loader2, color: "text-violet-500" },
   done: { icon: CheckCircle2, color: "text-emerald-400" },
 };
 
 export default function CalendarioPage() {
-  const { tasks, completeTask } = useTasks();
+  const { tasks, updateTaskStatus, addObservation, updateTask } = useTasks();
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
@@ -167,7 +167,7 @@ export default function CalendarioPage() {
 
             {/* Legend */}
             <div className="flex items-center justify-center gap-3 sm:gap-4 px-4 py-2 sm:py-3 border-t border-border/30 bg-muted/20">
-              {[{ c: "bg-red-400", l: "Alta" }, { c: "bg-amber-400", l: "Media" }, { c: "bg-emerald-400", l: "Baja" }].map((x) => (
+              {[{ c: "bg-violet-600", l: "Alta" }, { c: "bg-violet-400", l: "Media" }, { c: "bg-violet-300", l: "Baja" }].map((x) => (
                 <div key={x.l} className="flex items-center gap-1">
                   <div className={cn("h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full", x.c)} />
                   <span className="text-[9px] sm:text-[10px] text-muted-foreground">{x.l}</span>
@@ -225,7 +225,7 @@ export default function CalendarioPage() {
                 {selectedDayTasks.map((task) => {
                   const StatusIcon = statusIcon[task.status].icon;
                   return (
-                    <div key={task.id} className={cn("rounded-xl sm:rounded-2xl p-2.5 sm:p-3 transition-all hover:shadow-sm", task.status === "done" ? "bg-emerald-50/50" : task.priority === "high" ? "bg-red-50/50" : "bg-muted/30")}>
+                    <div key={task.id} className={cn("rounded-xl sm:rounded-2xl p-2.5 sm:p-3 transition-all hover:shadow-sm", task.status === "done" ? "bg-emerald-50/50" : task.priority === "high" ? "bg-violet-50/80" : "bg-muted/30")}>
                       <div className="flex items-start gap-2">
                         <button
                           className="shrink-0 hover:scale-110 transition-transform"
@@ -238,7 +238,7 @@ export default function CalendarioPage() {
                           <p className={cn("text-xs sm:text-sm font-medium leading-tight", task.status === "done" && "line-through text-muted-foreground")}>{task.title}</p>
                           <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">{task.companyName}</p>
                           <div className="flex items-center gap-1.5 mt-1">
-                            <span className={cn("text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full", task.priority === "high" ? "bg-red-100 text-red-600" : task.priority === "medium" ? "bg-amber-100 text-amber-600" : "bg-emerald-100 text-emerald-600")}>
+                            <span className={cn("text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full", task.priority === "high" ? "bg-violet-100 text-violet-700" : task.priority === "medium" ? "bg-violet-50 text-violet-600" : "bg-violet-50/50 text-violet-500")}>
                               {task.priority === "high" ? "Alta" : task.priority === "medium" ? "Media" : "Baja"}
                             </span>
                             {task.recurrence !== "none" && (
@@ -259,12 +259,20 @@ export default function CalendarioPage() {
         </div>
       </div>
 
-      <CompleteTaskDialog
+      <TaskActionDialog
         task={taskToComplete}
         open={!!taskToComplete}
         onClose={() => setTaskToComplete(null)}
-        onConfirm={(taskId, comment) => {
-          completeTask(taskId, comment);
+        onChangeStatus={(taskId, status, obs) => {
+          updateTaskStatus(taskId, status, obs);
+          setTaskToComplete(null);
+        }}
+        onAddObservation={(taskId, text) => {
+          addObservation(taskId, text);
+          setTaskToComplete(null);
+        }}
+        onEditTask={(taskId, updates) => {
+          updateTask(taskId, updates);
           setTaskToComplete(null);
         }}
       />

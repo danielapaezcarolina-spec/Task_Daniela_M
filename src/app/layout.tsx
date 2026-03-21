@@ -20,10 +20,14 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "TaskConta - Gestión de Tareas",
   description: "Sistema de gestión de tareas diarias para contadores",
+  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "TaskConta",
+  },
+  icons: {
+    apple: "/icons/icon-192.svg",
   },
 };
 

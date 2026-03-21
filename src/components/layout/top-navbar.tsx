@@ -59,7 +59,7 @@ export function TopNavbar() {
 
               <button className="relative p-2 rounded-full hover:bg-muted/60 transition-colors">
                 <Bell className="h-4 w-4 text-muted-foreground" />
-                <span className="absolute top-0.5 right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white ring-2 ring-white">
+                <span className="absolute top-0.5 right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-violet-500 text-[8px] font-bold text-white ring-2 ring-white">
                   3
                 </span>
               </button>

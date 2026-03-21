@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTasks } from "@/context/task-context";
-import { CompleteTaskDialog } from "@/components/popups/complete-task-dialog";
+import { TaskActionDialog } from "@/components/popups/task-action-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -18,9 +18,9 @@ import { cn } from "@/lib/utils";
 import type { Task } from "@/lib/mock-data";
 
 const priorityStyles = {
-  high: "bg-red-50 text-red-700",
-  medium: "bg-amber-50 text-amber-700",
-  low: "bg-emerald-50 text-emerald-700",
+  high: "bg-violet-100 text-violet-700",
+  medium: "bg-violet-50 text-violet-600",
+  low: "bg-violet-50/50 text-violet-500",
 };
 
 const priorityLabels = {
@@ -37,12 +37,12 @@ const statusLabels = {
 
 const statusColors = {
   todo: "bg-violet-50 text-violet-700",
-  in_progress: "bg-amber-50 text-amber-700",
+  in_progress: "bg-violet-100 text-violet-700",
   done: "bg-emerald-50 text-emerald-700",
 };
 
 export default function TareasPage() {
-  const { tasks, completeTask } = useTasks();
+  const { tasks, updateTaskStatus, addObservation, updateTask } = useTasks();
   const [searchQuery, setSearchQuery] = useState("");
   const [view, setView] = useState<"list" | "kanban">("list");
   const [taskToComplete, setTaskToComplete] = useState<Task | null>(null);
@@ -156,12 +156,20 @@ export default function TareasPage() {
         )}
       </div>
 
-      <CompleteTaskDialog
+      <TaskActionDialog
         task={taskToComplete}
         open={!!taskToComplete}
         onClose={() => setTaskToComplete(null)}
-        onConfirm={(taskId, comment) => {
-          completeTask(taskId, comment);
+        onChangeStatus={(taskId, status, obs) => {
+          updateTaskStatus(taskId, status, obs);
+          setTaskToComplete(null);
+        }}
+        onAddObservation={(taskId, text) => {
+          addObservation(taskId, text);
+          setTaskToComplete(null);
+        }}
+        onEditTask={(taskId, updates) => {
+          updateTask(taskId, updates);
           setTaskToComplete(null);
         }}
       />
@@ -176,7 +184,7 @@ function KanbanColumn({
 }) {
   const colorMap = {
     violet: { dot: "bg-violet-500" },
-    amber: { dot: "bg-amber-500" },
+    amber: { dot: "bg-violet-400" },
     emerald: { dot: "bg-emerald-500" },
   };
 
@@ -206,7 +214,7 @@ function KanbanColumn({
               <p className="text-[10px] text-muted-foreground line-clamp-2 mb-2">{task.description}</p>
             )}
             <div className="flex items-center gap-1.5">
-              <div className="h-1.5 w-1.5 rounded-full bg-violet-400" />
+              <div className="h-1.5 w-1.5 rounded-full bg-violet-300" />
               <span className="text-[10px] text-muted-foreground">{task.companyName}</span>
             </div>
           </div>

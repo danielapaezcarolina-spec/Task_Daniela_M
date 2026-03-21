@@ -40,7 +40,7 @@ export function Header({ title, subtitle }: HeaderProps) {
         {/* Notifications */}
         <button className="relative p-2 rounded-xl hover:bg-muted transition-colors">
           <Bell className="h-5 w-5 text-muted-foreground" />
-          <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-coral-500 text-[10px] font-bold text-white">
+          <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-violet-500 text-[10px] font-bold text-white">
             3
           </span>
         </button>

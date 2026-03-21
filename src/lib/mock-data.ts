@@ -11,6 +11,13 @@ export interface Company {
   sendDailySummary: boolean;
 }
 
+export interface TaskObservation {
+  id: string;
+  text: string;
+  date: string;
+  status: Task["status"];
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -24,6 +31,7 @@ export interface Task {
   createdAt: string;
   completedAt?: string;
   completionComment?: string;
+  observations?: TaskObservation[];
 }
 
 export interface Reminder {
@@ -41,7 +49,7 @@ export const companies: Company[] = [
     rif: "J-12345678-9",
     phone: "+584141234567",
     contactName: "Carlos Méndez",
-    color: "bg-orange-100 text-orange-700 border-orange-200",
+    color: "bg-violet-100 text-violet-700 border-violet-200",
     tasksTotal: 8,
     tasksCompleted: 5,
     pendingTasks: [],
@@ -53,7 +61,7 @@ export const companies: Company[] = [
     rif: "J-98765432-1",
     phone: "+584249876543",
     contactName: "María López",
-    color: "bg-rose-100 text-rose-700 border-rose-200",
+    color: "bg-violet-100 text-violet-700 border-violet-200",
     tasksTotal: 6,
     tasksCompleted: 2,
     pendingTasks: [],
@@ -65,7 +73,7 @@ export const companies: Company[] = [
     rif: "J-45678912-3",
     phone: "+584125556677",
     contactName: "Pedro Ramírez",
-    color: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    color: "bg-violet-100 text-violet-700 border-violet-200",
     tasksTotal: 4,
     tasksCompleted: 4,
     pendingTasks: [],
@@ -79,6 +87,7 @@ export const companies: Company[] = [
     contactName: "Ana Torres",
     color: "bg-violet-100 text-violet-700 border-violet-200",
     tasksTotal: 10,
+
     tasksCompleted: 7,
     pendingTasks: [],
     sendDailySummary: true,
@@ -221,6 +230,31 @@ export const tasks: Task[] = [
     createdAt: "2026-03-07",
     completedAt: "2026-03-14",
   },
+];
+
+export interface AccountReceivable {
+  id: string;
+  companyId: string;
+  client: string;
+  concept: string;
+  amount: number;
+  currency: "USD" | "BS";
+  issueDate: string;
+  dueDate: string;
+  status: "pending" | "partial" | "paid" | "overdue";
+  amountPaid: number;
+  notes?: string;
+}
+
+export const accountsReceivable: AccountReceivable[] = [
+  { id: "ar1", companyId: "1", client: "Distribuidora Norte", concept: "Servicios contables - Febrero 2026", amount: 500, currency: "USD", issueDate: "2026-02-28", dueDate: "2026-03-15", status: "pending", amountPaid: 0 },
+  { id: "ar2", companyId: "1", client: "Farmacia Central", concept: "Declaración ISLR 2025", amount: 350, currency: "USD", issueDate: "2026-01-15", dueDate: "2026-02-15", status: "overdue", amountPaid: 0 },
+  { id: "ar3", companyId: "1", client: "Inversiones ABC C.A.", concept: "Auditoría trimestral Q1", amount: 1200, currency: "USD", issueDate: "2026-03-01", dueDate: "2026-04-01", status: "partial", amountPaid: 600 },
+  { id: "ar4", companyId: "2", client: "Comercial El Faro S.A.", concept: "Nómina mensual Marzo", amount: 280, currency: "USD", issueDate: "2026-03-01", dueDate: "2026-03-20", status: "pending", amountPaid: 0 },
+  { id: "ar5", companyId: "2", client: "Tienda Express", concept: "Facturación Enero-Febrero", amount: 450, currency: "USD", issueDate: "2026-02-01", dueDate: "2026-03-01", status: "paid", amountPaid: 450 },
+  { id: "ar6", companyId: "3", client: "Servicios Delta C.A.", concept: "Cierre fiscal 2025", amount: 800, currency: "USD", issueDate: "2026-01-10", dueDate: "2026-02-10", status: "paid", amountPaid: 800 },
+  { id: "ar7", companyId: "4", client: "Grupo Montaña LLC", concept: "Asesoría tributaria", amount: 600, currency: "USD", issueDate: "2026-03-05", dueDate: "2026-04-05", status: "pending", amountPaid: 0 },
+  { id: "ar8", companyId: "4", client: "Constructora Sur", concept: "Balance general 2025", amount: 950, currency: "USD", issueDate: "2026-02-20", dueDate: "2026-03-20", status: "partial", amountPaid: 475 },
 ];
 
 export const stats = {

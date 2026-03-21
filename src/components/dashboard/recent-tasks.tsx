@@ -4,14 +4,14 @@ import { useState } from "react";
 import { useTasks } from "@/context/task-context";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CompleteTaskDialog } from "@/components/popups/complete-task-dialog";
+import { TaskActionDialog } from "@/components/popups/task-action-dialog";
 import { cn } from "@/lib/utils";
 import type { Task } from "@/lib/mock-data";
 
 const priorityStyles = {
-  high: "bg-red-50 text-red-700",
-  medium: "bg-amber-50 text-amber-700",
-  low: "bg-emerald-50 text-emerald-700",
+  high: "bg-violet-100 text-violet-700",
+  medium: "bg-violet-50 text-violet-600",
+  low: "bg-violet-50/50 text-violet-500",
 };
 
 const priorityLabels = {
@@ -21,15 +21,15 @@ const priorityLabels = {
 };
 
 export function RecentTasks() {
-  const { tasks, completeTask } = useTasks();
+  const { tasks, updateTaskStatus, addObservation, updateTask } = useTasks();
   const [taskToComplete, setTaskToComplete] = useState<Task | null>(null);
 
   const recentTasks = tasks
     .filter((t) => t.status !== "done")
     .slice(0, 5);
 
-  const handleConfirm = (taskId: string, comment: string) => {
-    completeTask(taskId, comment);
+  const handleChangeStatus = (taskId: string, status: Task["status"], obs?: string) => {
+    updateTaskStatus(taskId, status, obs);
     setTaskToComplete(null);
   };
 
@@ -79,11 +79,19 @@ export function RecentTasks() {
         </div>
       </div>
 
-      <CompleteTaskDialog
+      <TaskActionDialog
         task={taskToComplete}
         open={!!taskToComplete}
         onClose={() => setTaskToComplete(null)}
-        onConfirm={handleConfirm}
+        onChangeStatus={handleChangeStatus}
+        onAddObservation={(taskId, text) => {
+          addObservation(taskId, text);
+          setTaskToComplete(null);
+        }}
+        onEditTask={(taskId, updates) => {
+          updateTask(taskId, updates);
+          setTaskToComplete(null);
+        }}
       />
     </>
   );

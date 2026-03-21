@@ -10,8 +10,8 @@ import { stats } from "@/lib/mock-data";
 const statItems = [
   { label: "Total", value: stats.totalTasks, icon: CheckSquare, color: "text-violet-600", bg: "bg-violet-50" },
   { label: "Listas", value: stats.completed, icon: CheckSquare, color: "text-emerald-600", bg: "bg-emerald-50" },
-  { label: "En curso", value: stats.inProgress, icon: Clock, color: "text-amber-600", bg: "bg-amber-50" },
-  { label: "Urgentes", value: stats.urgentTasks, icon: AlertTriangle, color: "text-red-500", bg: "bg-red-50" },
+  { label: "En curso", value: stats.inProgress, icon: Clock, color: "text-violet-600", bg: "bg-violet-50" },
+  { label: "Urgentes", value: stats.urgentTasks, icon: AlertTriangle, color: "text-violet-600", bg: "bg-violet-50" },
 ];
 
 export function StatsCards() {

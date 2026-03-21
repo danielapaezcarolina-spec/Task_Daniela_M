@@ -18,7 +18,7 @@ const cardStyles: Record<string, { bg: string; iconBg: string; accent: string }>
   "1": { bg: "from-orange-100/80 via-amber-50 to-orange-50", iconBg: "bg-white/70 text-orange-500", accent: "bg-orange-400" },
   "2": { bg: "from-rose-100/80 via-pink-50 to-rose-50", iconBg: "bg-white/70 text-rose-500", accent: "bg-rose-400" },
   "3": { bg: "from-emerald-100/80 via-teal-50 to-emerald-50", iconBg: "bg-white/70 text-emerald-500", accent: "bg-emerald-400" },
-  "4": { bg: "from-violet-100/80 via-purple-50 to-violet-50", iconBg: "bg-white/70 text-violet-500", accent: "bg-violet-400" },
+  "4": { bg: "from-orange-100/80 via-amber-50 to-orange-50", iconBg: "bg-white/70 text-orange-500", accent: "bg-orange-400" },
 };
 
 export default function EmpresasPage() {

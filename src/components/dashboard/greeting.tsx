@@ -93,12 +93,12 @@ export function Greeting() {
       </div>
 
       <div className="flex items-start gap-2 mt-1">
-        <Sparkles className="h-3.5 w-3.5 text-violet-400 shrink-0 mt-0.5" />
+        <Sparkles className="h-3.5 w-3.5 text-emerald-400 shrink-0 mt-0.5" />
         <div className="min-w-0">
           <p className="text-xs sm:text-sm text-muted-foreground italic leading-snug">
             &ldquo;{quote.text}&rdquo;
           </p>
-          <p className="text-[11px] text-violet-500 font-medium mt-0.5">
+          <p className="text-[11px] text-emerald-500 font-medium mt-0.5">
             — {quote.author}
           </p>
           <p className="text-[10px] text-muted-foreground/60 mt-0.5">
