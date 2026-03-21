@@ -5,16 +5,23 @@ import {
   Clock,
   AlertTriangle,
 } from "lucide-react";
-import { stats } from "@/lib/mock-data";
-
-const statItems = [
-  { label: "Total", value: stats.totalTasks, icon: CheckSquare, color: "text-violet-600", bg: "bg-violet-50" },
-  { label: "Listas", value: stats.completed, icon: CheckSquare, color: "text-emerald-600", bg: "bg-emerald-50" },
-  { label: "En curso", value: stats.inProgress, icon: Clock, color: "text-violet-600", bg: "bg-violet-50" },
-  { label: "Urgentes", value: stats.urgentTasks, icon: AlertTriangle, color: "text-violet-600", bg: "bg-violet-50" },
-];
+import { useTasks } from "@/context/task-context";
 
 export function StatsCards() {
+  const { tasks } = useTasks();
+
+  const totalTasks = tasks.length;
+  const completed = tasks.filter((t) => t.status === "done").length;
+  const inProgress = tasks.filter((t) => t.status === "in_progress").length;
+  const urgentTasks = tasks.filter((t) => t.priority === "high" && t.status !== "done").length;
+
+  const statItems = [
+    { label: "Total", value: totalTasks, icon: CheckSquare, color: "text-violet-600", bg: "bg-violet-50" },
+    { label: "Listas", value: completed, icon: CheckSquare, color: "text-emerald-600", bg: "bg-emerald-50" },
+    { label: "En curso", value: inProgress, icon: Clock, color: "text-violet-600", bg: "bg-violet-50" },
+    { label: "Urgentes", value: urgentTasks, icon: AlertTriangle, color: "text-violet-600", bg: "bg-violet-50" },
+  ];
+
   return (
     <div className="grid grid-cols-4 gap-2 sm:gap-3">
       {statItems.map((item) => (

@@ -17,14 +17,15 @@ export default function LoginPage() {
     if (isAuthenticated) router.replace("/");
   }, [isAuthenticated, router]);
 
-  const handleDigit = (digit: string) => {
+  const handleDigit = async (digit: string) => {
     if (pin.length >= 4 || success) return;
     setError(false);
     const newPin = pin + digit;
     setPin(newPin);
 
     if (newPin.length === 4) {
-      if (login(newPin)) {
+      const ok = await login(newPin);
+      if (ok) {
         setSuccess(true);
         setTimeout(() => router.replace("/"), 600);
       } else {

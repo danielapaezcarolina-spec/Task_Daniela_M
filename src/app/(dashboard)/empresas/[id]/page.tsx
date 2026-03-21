@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { companies, accountsReceivable, type Task, type AccountReceivable } from "@/lib/mock-data";
+import type { Task, AccountReceivable } from "@/lib/types";
+import { useCompanies } from "@/hooks/use-companies";
+import { useAccountsReceivable } from "@/hooks/use-accounts-receivable";
 import { useTasks } from "@/context/task-context";
 import { TaskActionDialog } from "@/components/popups/task-action-dialog";
 import { Button } from "@/components/ui/button";
@@ -61,10 +63,11 @@ export default function EmpresaDetallePage() {
   const params = useParams();
   const router = useRouter();
   const companyId = params.id as string;
-  const { tasks: allTasks, updateTaskStatus, addObservation, updateTask } = useTasks();
-  const company = companies.find((c) => c.id === companyId);
+  const { tasks: allTasks, updateTaskStatus, addObservation, updateTask, createTask } = useTasks();
+  const { companies: companiesList } = useCompanies();
+  const { accounts: companyAR, createAR } = useAccountsReceivable(companyId);
+  const company = companiesList.find((c) => c.id === companyId);
   const companyTasks = allTasks.filter((t) => t.companyId === companyId);
-  const companyAR = accountsReceivable.filter((ar) => ar.companyId === companyId);
 
   const [mainTab, setMainTab] = useState<MainTab>("tareas");
   const [filter, setFilter] = useState<FilterStatus>("all");
@@ -97,16 +100,29 @@ export default function EmpresaDetallePage() {
   const totalCollected = companyAR.reduce((sum, ar) => sum + ar.amountPaid, 0);
   const overdueCount = companyAR.filter((ar) => ar.status === "overdue").length;
 
-  const handleCreateTask = () => {
+  const handleCreateTask = async () => {
     if (!newTask.title.trim()) return;
-    alert(`Tarea "${newTask.title}" creada (${recurrenceLabels[newTask.recurrence]})`);
+    await createTask({
+      title: newTask.title,
+      description: newTask.description,
+      priority: newTask.priority,
+      recurrence: newTask.recurrence,
+      dueDate: newTask.dueDate,
+      companyId,
+    });
     setNewTask({ title: "", description: "", priority: "medium", recurrence: "none", dueDate: new Date().toISOString().split("T")[0] });
     setShowNewTask(false);
   };
 
-  const handleCreateAR = () => {
+  const handleCreateAR = async () => {
     if (!newAR.client.trim() || !newAR.amount) return;
-    alert(`Cuenta por cobrar a "${newAR.client}" por ${newAR.currency} ${newAR.amount} creada`);
+    await createAR({
+      client: newAR.client,
+      concept: newAR.concept,
+      amount: newAR.amount,
+      currency: newAR.currency,
+      dueDate: newAR.dueDate,
+    });
     setNewAR({ client: "", concept: "", amount: "", currency: "USD", dueDate: new Date().toISOString().split("T")[0] });
     setShowNewAR(false);
   };

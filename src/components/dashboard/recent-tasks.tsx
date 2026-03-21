@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TaskActionDialog } from "@/components/popups/task-action-dialog";
 import { cn } from "@/lib/utils";
-import type { Task } from "@/lib/mock-data";
+import type { Task } from "@/lib/types";
 
 const priorityStyles = {
   high: "bg-violet-100 text-violet-700",

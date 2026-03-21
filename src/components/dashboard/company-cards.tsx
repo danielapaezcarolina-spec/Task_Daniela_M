@@ -1,6 +1,6 @@
 "use client";
 
-import { companies } from "@/lib/mock-data";
+import { useCompanies } from "@/hooks/use-companies";
 import { useTasks } from "@/context/task-context";
 import { Building2, ArrowRight, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
@@ -15,6 +15,7 @@ const cardStyles: Record<string, { bg: string; iconBg: string; dot: string }> = 
 
 export function CompanyCards() {
   const { tasks } = useTasks();
+  const { companies } = useCompanies();
   return (
     <div>
       <div className="flex items-center justify-between mb-3 sm:mb-4">

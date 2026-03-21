@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/session";
 
 // GET /api/tasks - List all tasks (optionally filter by companyId)
 export async function GET(req: Request) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const url = new URL(req.url);
   const companyId = url.searchParams.get("companyId");
 
@@ -17,6 +20,8 @@ export async function GET(req: Request) {
 
 // POST /api/tasks - Create a new task
 export async function POST(req: Request) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const body = await req.json();
 
   const task = await prisma.task.create({
@@ -28,7 +33,7 @@ export async function POST(req: Request) {
       recurrence: body.recurrence || "none",
       dueDate: new Date(body.dueDate),
       companyId: body.companyId,
-      userId: body.userId,
+      userId: session.userId,
     },
     include: { observations: true, company: true },
   });

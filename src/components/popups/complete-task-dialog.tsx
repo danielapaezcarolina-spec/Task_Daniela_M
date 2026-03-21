@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Task } from "@/lib/mock-data";
+import type { Task } from "@/lib/types";
 
 interface CompleteTaskDialogProps {
   task: Task | null;

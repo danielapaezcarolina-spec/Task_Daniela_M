@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTasks } from "@/context/task-context";
 import { TaskActionDialog } from "@/components/popups/task-action-dialog";
-import type { Task } from "@/lib/mock-data";
+import type { Task } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
   ChevronLeft,

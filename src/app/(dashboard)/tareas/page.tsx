@@ -15,7 +15,7 @@ import {
   Filter,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Task } from "@/lib/mock-data";
+import type { Task } from "@/lib/types";
 
 const priorityStyles = {
   high: "bg-violet-100 text-violet-700",

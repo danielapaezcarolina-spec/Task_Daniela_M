@@ -4,7 +4,7 @@ import { useMemo, useState, useEffect, useCallback } from "react";
 import { useTasks } from "@/context/task-context";
 import { useReminders } from "@/context/reminder-context";
 import { getMorningGreeting, getMorningComment, getEveningGreeting, getEveningComment } from "@/lib/wa-templates";
-import { companies } from "@/lib/mock-data";
+import { useCompanies } from "@/hooks/use-companies";
 import { getWAStatus, connectWA, disconnectWA, sendWAMessage, type WAStatus } from "@/lib/whatsapp-client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -52,6 +52,7 @@ const typeConfig: Record<MessageType, { label: string; icon: typeof FileText; ba
 
 export default function WhatsAppPage() {
   const { tasks } = useTasks();
+  const { companies } = useCompanies();
   const { firedNotifications } = useReminders();
   const [waStatus, setWaStatus] = useState<WAStatus>({ status: "disconnected", qr: null });
   const [loading, setLoading] = useState(false);
@@ -255,7 +256,7 @@ export default function WhatsAppPage() {
     });
 
     return generated;
-  }, [tasks, firedNotifications]);
+  }, [tasks, companies, firedNotifications]);
 
   const sentCount = messages.filter((m) => m.status === "sent").length;
   const scheduledCount = messages.filter((m) => m.status === "scheduled").length;
@@ -299,16 +300,12 @@ export default function WhatsAppPage() {
 
           {/* QR Code */}
           {waStatus.status === "qr" && waStatus.qr && (
-            <div className="rounded-xl bg-white p-6 sm:p-8 flex flex-col items-center justify-center gap-3 sm:gap-4 border border-violet-200">
-              <div className="bg-white p-4 rounded-xl">
-                {/* QR as text - in production use qrcode library to render */}
-                <div className="flex flex-col items-center gap-3">
-                  <QrCode className="h-16 w-16 text-violet-500" />
-                  <p className="text-xs font-mono text-center text-muted-foreground break-all max-w-[200px] line-clamp-3">
-                    QR generado - escanea desde WhatsApp
-                  </p>
-                </div>
-              </div>
+            <div className="rounded-xl bg-white p-4 sm:p-6 flex flex-col items-center justify-center gap-3 border border-violet-200">
+              <img
+                src={waStatus.qr}
+                alt="Codigo QR WhatsApp"
+                className="w-48 h-48 sm:w-56 sm:h-56 rounded-lg"
+              />
               <div className="text-center">
                 <p className="text-xs sm:text-sm font-medium text-foreground">Escanea el codigo QR con WhatsApp</p>
                 <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">Abre WhatsApp {'>'} Dispositivos vinculados {'>'} Vincular dispositivo</p>

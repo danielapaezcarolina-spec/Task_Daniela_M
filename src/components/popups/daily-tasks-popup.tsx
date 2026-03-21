@@ -15,7 +15,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Task } from "@/lib/mock-data";
+import type { Task } from "@/lib/types";
 
 const priorityStyles: Record<string, string> = {
   high: "bg-violet-100 border-violet-200",

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { companies } from "@/lib/mock-data";
+import { useCompanies } from "@/hooks/use-companies";
 import { useTasks } from "@/context/task-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,7 @@ const cardStyles: Record<string, { bg: string; iconBg: string; accent: string }>
 
 export default function EmpresasPage() {
   const { tasks } = useTasks();
+  const { companies } = useCompanies();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
 

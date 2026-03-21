@@ -1,18 +1,17 @@
 "use client";
 
-import { stats, companies } from "@/lib/mock-data";
+import { useTasks } from "@/context/task-context";
+import { useCompanies } from "@/hooks/use-companies";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 
-const companyAvatars = [
-  { initials: "AB", color: "bg-violet-100 text-violet-700" },
-  { initials: "EF", color: "bg-violet-100 text-violet-700" },
-  { initials: "SD", color: "bg-violet-100 text-violet-700" },
-  { initials: "GM", color: "bg-violet-100 text-violet-700" },
-];
-
 export function ProgressSection() {
-  const percentage = stats.completionRate;
+  const { tasks } = useTasks();
+  const { companies } = useCompanies();
+
+  const totalTasks = tasks.length;
+  const completed = tasks.filter((t) => t.status === "done").length;
+  const percentage = totalTasks > 0 ? Math.round((completed / totalTasks) * 100) : 0;
 
   return (
     <div className="rounded-2xl bg-card p-4 sm:p-6 shadow-sm border border-border/50">
@@ -45,7 +44,7 @@ export function ProgressSection() {
         {/* Company progress */}
         <div className="flex-1 min-w-0">
           <p className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3">
-            {stats.completed} de {stats.totalTasks} tareas completadas
+            {completed} de {totalTasks} tareas completadas
           </p>
 
           <div className="flex items-center gap-2 mb-3 sm:mb-4">
@@ -55,10 +54,10 @@ export function ProgressSection() {
           </div>
 
           <div className="flex -space-x-2">
-            {companyAvatars.map((avatar, i) => (
-              <Avatar key={i} className="h-8 w-8 sm:h-10 sm:w-10 border-2 border-card">
-                <AvatarFallback className={`${avatar.color} text-[10px] sm:text-xs font-semibold`}>
-                  {avatar.initials}
+            {companies.slice(0, 4).map((company) => (
+              <Avatar key={company.id} className="h-8 w-8 sm:h-10 sm:w-10 border-2 border-card">
+                <AvatarFallback className="bg-violet-100 text-violet-700 text-[10px] sm:text-xs font-semibold">
+                  {company.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
             ))}

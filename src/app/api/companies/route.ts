@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/session";
 
 // GET /api/companies
 export async function GET() {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const companies = await prisma.company.findMany({
     include: {
       _count: { select: { tasks: true } },
@@ -24,6 +27,8 @@ export async function GET() {
 
 // POST /api/companies
 export async function POST(req: Request) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const body = await req.json();
 
   const company = await prisma.company.create({
@@ -33,7 +38,7 @@ export async function POST(req: Request) {
       phone: body.phone,
       contactName: body.contactName,
       sendDailySummary: body.sendDailySummary ?? true,
-      userId: body.userId,
+      userId: session.userId,
     },
   });
 

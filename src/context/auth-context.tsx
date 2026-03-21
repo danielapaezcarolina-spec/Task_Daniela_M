@@ -1,49 +1,61 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import { auth } from "@/lib/api";
+import type { AppUser } from "@/lib/types";
 
 interface AuthContextType {
   isAuthenticated: boolean;
   justLoggedIn: boolean;
-  login: (pin: string) => boolean;
+  user: AppUser | null;
+  login: (pin: string) => Promise<boolean>;
   logout: () => void;
   clearJustLoggedIn: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const VALID_PIN = "1234";
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [justLoggedIn, setJustLoggedIn] = useState(false);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Check existing session on mount
   useEffect(() => {
-    const session = sessionStorage.getItem("tc_auth");
-    if (session === "true") {
-      setIsAuthenticated(true);
-    }
-    setIsLoading(false);
+    auth.check()
+      .then((data) => {
+        if (data.user) {
+          setUser(data.user);
+          setIsAuthenticated(true);
+        }
+      })
+      .catch(() => {
+        // No session
+      })
+      .finally(() => setIsLoading(false));
   }, []);
 
-  const login = (pin: string): boolean => {
-    if (pin === VALID_PIN) {
+  const login = useCallback(async (pin: string): Promise<boolean> => {
+    try {
+      const data = await auth.login(pin);
+      setUser(data.user);
       setIsAuthenticated(true);
       setJustLoggedIn(true);
-      sessionStorage.setItem("tc_auth", "true");
       return true;
+    } catch {
+      return false;
     }
-    return false;
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
+    auth.logout().catch(() => {});
     setIsAuthenticated(false);
     setJustLoggedIn(false);
-    sessionStorage.removeItem("tc_auth");
-  };
+    setUser(null);
+  }, []);
 
-  const clearJustLoggedIn = () => setJustLoggedIn(false);
+  const clearJustLoggedIn = useCallback(() => setJustLoggedIn(false), []);
 
   if (isLoading) {
     return (
@@ -54,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, justLoggedIn, login, logout, clearJustLoggedIn }}>
+    <AuthContext.Provider value={{ isAuthenticated, justLoggedIn, user, login, logout, clearJustLoggedIn }}>
       {children}
     </AuthContext.Provider>
   );

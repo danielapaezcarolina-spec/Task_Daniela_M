@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getWhatsAppService } from "@/lib/whatsapp-service";
+import QRCode from "qrcode";
 
 // GET /api/whatsapp - Status, pending confirmations, and task completions
 export async function GET(req: Request) {
@@ -18,7 +19,8 @@ export async function GET(req: Request) {
   }
 
   const { status, qr } = wa.getStatus();
-  return NextResponse.json({ status, qr });
+  const qrDataUrl = qr ? await QRCode.toDataURL(qr, { width: 300, margin: 2 }).catch(() => null) : null;
+  return NextResponse.json({ status, qr: qrDataUrl });
 }
 
 // POST /api/whatsapp - Actions: connect, disconnect, send, reminder
@@ -31,7 +33,8 @@ export async function POST(req: Request) {
       await wa.connect();
       await new Promise((r) => setTimeout(r, 2000));
       const { status, qr } = wa.getStatus();
-      return NextResponse.json({ status, qr });
+      const qrImg = qr ? await QRCode.toDataURL(qr, { width: 300, margin: 2 }).catch(() => null) : null;
+      return NextResponse.json({ status, qr: qrImg });
     }
 
     case "disconnect": {

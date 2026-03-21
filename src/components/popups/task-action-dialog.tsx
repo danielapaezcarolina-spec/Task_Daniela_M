@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Circle, Loader2, CheckCircle2, Pencil, MessageSquarePlus, ArrowRightCircle, X, Calendar, ChevronDown, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useReminders } from "@/context/reminder-context";
-import type { Task } from "@/lib/mock-data";
+import type { Task } from "@/lib/types";
 
 type ActionTab = "status" | "observation" | "edit";
 
