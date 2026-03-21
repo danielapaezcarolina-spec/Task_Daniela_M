@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { useTasks } from "@/context/task-context";
 import { useReminders } from "@/context/reminder-context";
+import { getMorningGreeting, getMorningComment, getEveningGreeting, getEveningComment } from "@/lib/wa-templates";
 import { companies } from "@/lib/mock-data";
 import { getWAStatus, connectWA, disconnectWA, sendWAMessage, type WAStatus } from "@/lib/whatsapp-client";
 import { Button } from "@/components/ui/button";
@@ -130,7 +131,7 @@ export default function WhatsAppPage() {
       date: todayFormatted,
       time: "8:00 AM",
       status: "scheduled",
-      message: `Buenos dias, Daniela!\nTus tareas para hoy:\n${companyLines.length > 0 ? companyLines.join("\n") : "  Sin tareas programadas para hoy"}\nTotal: ${todayTasks.length} tarea${todayTasks.length !== 1 ? "s" : ""} | ${urgentToday.length} urgente${urgentToday.length !== 1 ? "s" : ""}`,
+      message: `${getMorningGreeting()}\n\n${companyLines.length > 0 ? companyLines.join("\n") : "  Sin tareas programadas para hoy"}\n\nTotal: ${todayTasks.length} tarea${todayTasks.length !== 1 ? "s" : ""} | ${urgentToday.length} urgente${urgentToday.length !== 1 ? "s" : ""}${getMorningComment(todayTasks.length)}`,
     });
 
     // --- ALERTS for overdue/due-today tasks ---
@@ -164,7 +165,8 @@ export default function WhatsAppPage() {
     const tomorrowStr = tomorrow.toISOString().split("T")[0];
     const tomorrowTasks = tasks.filter((t) => t.dueDate === tomorrowStr && t.status !== "done");
 
-    let eveningMsg = `Resumen del dia:\nCompletadas: ${completedToday.length}/${allTodayTasks.length} tareas\nPendientes: ${pendingToday.length} tarea${pendingToday.length !== 1 ? "s" : ""}`;
+    const completedPercent = allTodayTasks.length > 0 ? Math.round((completedToday.length / allTodayTasks.length) * 100) : 100;
+    let eveningMsg = `${getEveningGreeting()}\n\n✅ Completadas: ${completedToday.length}/${allTodayTasks.length} tareas\n⏳ Pendientes: ${pendingToday.length} tarea${pendingToday.length !== 1 ? "s" : ""}${getEveningComment(completedPercent)}`;
 
     if (pendingToday.length > 0) {
       eveningMsg += `\n\nTareas no completadas hoy:`;

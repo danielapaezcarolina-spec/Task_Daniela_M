@@ -6,6 +6,12 @@ import makeWASocket, {
 import { Boom } from "@hapi/boom";
 import path from "path";
 import fs from "fs";
+import {
+  getFirstReminderText,
+  getFollowUpReminderText,
+  getConfirmationText,
+  getRejectionText,
+} from "./wa-templates";
 
 type ConnectionStatus = "disconnected" | "connecting" | "connected" | "qr";
 
@@ -153,17 +159,17 @@ function createService(): WhatsAppService {
               viaWhatsApp: true,
             });
 
-            // Reply confirmation
+            // Reply confirmation with friendly template
             sock.sendMessage(senderJid, {
-              text: `Perfecto! Tarea "${pending.taskTitle}" marcada como completada.\n\nSeguimos con las demas tareas del dia!`,
+              text: getConfirmationText({ taskTitle: pending.taskTitle, companyName: pending.companyName, message: pending.message }),
             }).catch(() => {});
 
           } else if (isNo) {
             pending.status = "rejected";
 
-            // Reply and re-add as pending (will remind again)
+            // Reply with friendly rejection template
             sock.sendMessage(senderJid, {
-              text: `Entendido. Te recordare de nuevo en unos minutos.\n\nTarea: ${pending.taskTitle}\nEmpresa: ${pending.companyName}`,
+              text: getRejectionText({ taskTitle: pending.taskTitle, companyName: pending.companyName, message: pending.message }),
             }).catch(() => {});
 
             // Create new pending for next reminder cycle
@@ -208,17 +214,20 @@ function createService(): WhatsAppService {
 
       const confirmId = `conf-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-      const text = [
-        `TaskConta - Recordatorio`,
-        ``,
-        params.message,
-        ``,
-        `Tarea: ${params.taskTitle}`,
-        `Empresa: ${params.companyName}`,
-        ``,
-        `Ya completaste esta tarea?`,
-        `Responde "si" o "no"`,
-      ].join("\n");
+      // Check if this is a follow-up (already reminded before)
+      const isFollowUp = svc.pendingConfirmations.some(
+        (p) => p.taskId === params.taskId && (p.status === "rejected" || p.status === "waiting")
+      );
+
+      const templateParams = {
+        taskTitle: params.taskTitle,
+        companyName: params.companyName,
+        message: params.message,
+      };
+
+      const text = isFollowUp
+        ? getFollowUpReminderText(templateParams)
+        : getFirstReminderText(templateParams);
 
       try {
         await svc.socket.sendMessage(phoneToJid(params.phone), { text });
