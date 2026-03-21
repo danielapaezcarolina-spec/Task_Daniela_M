@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?  @unique
+  phone     String?
+  pin       String   @default("1234")
+  role      String   @default("contador") // contador, admin
+  createdAt DateTime @default(now())
+
+  companies     Company[]
+  tasks         Task[]
+  reminders     Reminder[]
+  waMessages    WhatsAppMessage[]
+}
+
+model Company {
+  id              String   @id @default(cuid())
+  name            String
+  rif             String
+  phone           String
+  contactName     String
+  sendDailySummary Boolean @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  tasks              Task[]
+  accountsReceivable AccountReceivable[]
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  priority    String   @default("medium") // high, medium, low
+  status      String   @default("todo")   // todo, in_progress, done
+  recurrence  String   @default("none")   // none, daily, weekly, monthly
+  dueDate     DateTime
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
+  completionComment String?
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  observations TaskObservation[]
+  reminders    Reminder[]
+}
+
+model TaskObservation {
+  id     String   @id @default(cuid())
+  text   String
+  status String   // status at the time of observation
+  date   DateTime @default(now())
+
+  taskId String
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
+
+model AccountReceivable {
+  id         String   @id @default(cuid())
+  client     String
+  concept    String
+  amount     Float
+  currency   String   @default("USD") // USD, BS
+  issueDate  DateTime
+  dueDate    DateTime
+  status     String   @default("pending") // pending, partial, paid, overdue
+  amountPaid Float    @default(0)
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
+model Reminder {
+  id              String   @id @default(cuid())
+  message         String
+  scheduledTime   DateTime
+  status          String   @default("pending") // pending, fired, dismissed
+  repeat          Boolean  @default(false)
+  repeatIntervalMs Int     @default(180000)
+  recipientPhone  String?
+  createdAt       DateTime @default(now())
+
+  taskId String
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model WhatsAppMessage {
+  id             String   @id @default(cuid())
+  type           String   // morning, alert, evening, client, reminder
+  recipient      String
+  recipientPhone String
+  message        String
+  status         String   @default("scheduled") // scheduled, sent, failed
+  sentAt         DateTime?
+  createdAt      DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
