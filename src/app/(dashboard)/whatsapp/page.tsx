@@ -5,7 +5,7 @@ import { useTasks } from "@/context/task-context";
 import { useReminders } from "@/context/reminder-context";
 import { getMorningGreeting, getMorningComment, getEveningGreeting, getEveningComment } from "@/lib/wa-templates";
 import { useCompanies } from "@/hooks/use-companies";
-import { getWAStatus, connectWA, disconnectWA, sendWAMessage, type WAStatus } from "@/lib/whatsapp-client";
+import { getWAStatus, connectWA, disconnectWA, sendWAMessage, sendWAReminder, type WAStatus } from "@/lib/whatsapp-client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -60,6 +60,9 @@ export default function WhatsAppPage() {
   const [expandedMsg, setExpandedMsg] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 5;
+  const [testPhone, setTestPhone] = useState("");
+  const [testSending, setTestSending] = useState(false);
+  const [testResult, setTestResult] = useState<string | null>(null);
 
   // Poll WhatsApp status
   const fetchStatus = useCallback(async () => {
@@ -334,6 +337,62 @@ export default function WhatsAppPage() {
                 <p className="text-xs font-medium text-emerald-700">WhatsApp conectado correctamente</p>
                 <p className="text-[10px] text-emerald-600/70">Los recordatorios y resumenes se enviaran automaticamente</p>
               </div>
+            </div>
+          )}
+
+          {/* Test Panel */}
+          {isConnected && (
+            <div className="rounded-xl bg-violet-50 border border-violet-200 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-violet-500" />
+                <h4 className="text-xs font-semibold text-violet-700">Zona de prueba</h4>
+              </div>
+              <p className="text-[10px] text-violet-600">
+                Envia un recordatorio de prueba. Daniela recibira la tarea por WhatsApp y al responder "si", se tachara automaticamente en el sistema.
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={testPhone}
+                  onChange={(e) => setTestPhone(e.target.value)}
+                  placeholder="Numero de WhatsApp (ej: +584121234567)"
+                  className="flex-1 rounded-lg border border-violet-200 bg-white px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300"
+                />
+                <Button
+                  size="sm"
+                  className="rounded-full gap-1.5 h-8 text-xs px-4"
+                  disabled={testSending || !testPhone.trim() || !tasks.length}
+                  onClick={async () => {
+                    setTestSending(true);
+                    setTestResult(null);
+                    const pendingTask = tasks.find((t) => t.status !== "done") || tasks[0];
+                    try {
+                      const sent = await sendWAReminder({
+                        taskId: pendingTask.id,
+                        taskTitle: pendingTask.title,
+                        companyName: pendingTask.companyName || "Empresa",
+                        phone: testPhone,
+                        message: "Prueba de recordatorio - Responde 'si' para completar la tarea",
+                      });
+                      setTestResult(sent ? "Enviado! Responde 'si' en WhatsApp para ver como se tacha la tarea." : "Error al enviar. Verifica la conexion.");
+                    } catch {
+                      setTestResult("Error al enviar.");
+                    }
+                    setTestSending(false);
+                  }}
+                >
+                  {testSending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
+                  Enviar prueba
+                </Button>
+              </div>
+              {testResult && (
+                <div className={cn(
+                  "rounded-lg p-2.5 text-[10px] font-medium",
+                  testResult.startsWith("Enviado") ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-700 border border-red-200"
+                )}>
+                  {testResult}
+                </div>
+              )}
             </div>
           )}
         </div>
