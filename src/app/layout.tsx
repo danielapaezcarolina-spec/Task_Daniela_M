@@ -27,6 +27,7 @@ export const metadata: Metadata = {
     title: "TaskConta",
   },
   icons: {
+    icon: "/favicon.svg",
     apple: "/icons/icon-192.svg",
   },
 };

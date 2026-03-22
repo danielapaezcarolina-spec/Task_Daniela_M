@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { BookOpen, RefreshCw, Sparkles } from "lucide-react";
 
 const localQuotes = [
@@ -60,22 +60,7 @@ export function Greeting() {
     setTimeout(() => setSpinning(false), 500);
   };
 
-  useEffect(() => {
-    async function fetchQuote() {
-      try {
-        const res = await fetch("https://api.quotable.io/random?maxLength=120", {
-          signal: AbortSignal.timeout(3000),
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setQuote({ text: data.content, author: data.author });
-        }
-      } catch {
-        // Keep local quote
-      }
-    }
-    fetchQuote();
-  }, []);
+  // Uses local quotes only - external API removed
 
   return (
     <div>

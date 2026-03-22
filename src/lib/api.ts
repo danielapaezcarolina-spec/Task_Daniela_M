@@ -6,6 +6,7 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
     headers: { "Content-Type": "application/json", ...options?.headers },
   });
   if (!res.ok) {
+    if (res.status === 401) throw new Error("Unauthorized");
     const err = await res.json().catch(() => ({ error: "Request failed" }));
     throw new Error(err.error || `HTTP ${res.status}`);
   }
