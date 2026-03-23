@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { useNotificationRules } from "@/hooks/use-notification-rules";
 import {
   Bell,
   Clock,
@@ -13,6 +14,7 @@ import {
   Plus,
   Smartphone,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const reminders = [
   { id: "1", title: "Resumen matutino", description: "Recibe un resumen de tus tareas del día cada mañana", time: "8:00 AM", icon: Sun, enabled: true },
@@ -21,7 +23,11 @@ const reminders = [
   { id: "4", title: "Recordatorio semanal", description: "Resumen semanal de progreso por empresa", time: "Lunes 9:00 AM", icon: Clock, enabled: true },
 ];
 
+const DAY_OPTIONS = [1, 2, 3, 5, 7];
+
 export default function RecordatoriosPage() {
+  const { generalRule, updateGeneralRule } = useNotificationRules();
+
   return (
     <>
       <div>
@@ -31,7 +37,7 @@ export default function RecordatoriosPage() {
 
       <div className="py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* WhatsApp status */}
-        <div className="rounded-2xl bg-gradient-to-r from-emerald-400 to-emerald-500 p-4 sm:p-5 text-white shadow-sm">
+        <div className="rounded-2xl bg-linear-to-r from-emerald-400 to-emerald-500 p-4 sm:p-5 text-white shadow-sm">
           <div className="flex items-center gap-3 sm:gap-4">
             <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm shrink-0">
               <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -43,6 +49,57 @@ export default function RecordatoriosPage() {
             <div className="flex items-center gap-1.5 shrink-0">
               <div className="h-2 w-2 rounded-full bg-white animate-pulse" />
               <span className="text-xs font-medium hidden sm:inline">Activo</span>
+            </div>
+          </div>
+        </div>
+
+        {/* ===== REGLAS DE NOTIFICACIÓN ===== */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base sm:text-lg font-semibold text-foreground">Reglas de notificación</h3>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">Cuántos días antes notificar a Daniela por WhatsApp</p>
+            </div>
+          </div>
+
+          {/* Regla general */}
+          <div className="rounded-2xl bg-card border border-violet-200/60 p-4 sm:p-5 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-50">
+                <Bell className="h-4 w-4 text-violet-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <div>
+                    <h4 className="text-xs sm:text-sm font-semibold text-foreground">Regla general</h4>
+                    <p className="text-[10px] text-muted-foreground">Aplica a todas las empresas que no tengan regla individual</p>
+                  </div>
+                  <Switch
+                    checked={generalRule.enabled}
+                    onCheckedChange={(v) => updateGeneralRule({ enabled: v })}
+                  />
+                </div>
+                <div className={cn("mt-3", !generalRule.enabled && "opacity-40 pointer-events-none")}>
+                  <p className="text-[10px] text-muted-foreground mb-2">Días de anticipación</p>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {DAY_OPTIONS.map((d) => (
+                      <button
+                        key={d}
+                        onClick={() => updateGeneralRule({ daysBefore: d })}
+                        className={cn(
+                          "h-8 w-8 rounded-xl text-xs font-bold transition-all",
+                          generalRule.daysBefore === d
+                            ? "bg-violet-600 text-white shadow-sm"
+                            : "bg-muted text-muted-foreground hover:bg-violet-50 hover:text-violet-600"
+                        )}
+                      >
+                        {d}
+                      </button>
+                    ))}
+                    <span className="flex items-center text-[10px] text-muted-foreground pl-1">días antes</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

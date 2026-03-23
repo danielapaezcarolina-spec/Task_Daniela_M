@@ -26,8 +26,8 @@ export interface Task {
   id: string;
   title: string;
   description?: string;
-  companyId: string;
-  companyName: string;
+  companyId?: string;
+  companyName?: string;
   priority: "high" | "medium" | "low";
   status: "todo" | "in_progress" | "done";
   recurrence: "none" | "daily" | "weekly" | "monthly";

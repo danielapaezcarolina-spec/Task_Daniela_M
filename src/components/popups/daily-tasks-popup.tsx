@@ -175,10 +175,12 @@ export function DailyTasksPopup({ open, onClose }: DailyTasksPopupProps) {
                       )}
                     >
                       <div className="flex items-start gap-3">
-                        <button
+                        <div
                           onClick={(e) => handleStatusClick(e, task)}
-                          className="shrink-0 hover:scale-110 transition-transform"
+                          className="shrink-0 hover:scale-110 transition-transform cursor-pointer"
                           title="Marcar como completada"
+                          role="button"
+                          tabIndex={0}
                         >
                           <StatusIcon
                             className={cn(
@@ -187,7 +189,7 @@ export function DailyTasksPopup({ open, onClose }: DailyTasksPopupProps) {
                               task.status === "in_progress" && "animate-spin"
                             )}
                           />
-                        </button>
+                        </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
                             <p className="text-sm font-semibold text-foreground leading-tight">

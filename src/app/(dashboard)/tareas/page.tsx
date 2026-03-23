@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useTasks } from "@/context/task-context";
+import { useCompanies } from "@/hooks/use-companies";
 import { TaskActionDialog } from "@/components/popups/task-action-dialog";
+import { NewTaskDialog } from "@/components/popups/new-task-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +14,6 @@ import {
   Search,
   List,
   Columns3,
-  Filter,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Task } from "@/lib/types";
@@ -42,10 +43,12 @@ const statusColors = {
 };
 
 export default function TareasPage() {
-  const { tasks, updateTaskStatus, addObservation, updateTask } = useTasks();
+  const { tasks, updateTaskStatus, addObservation, updateTask, createTask } = useTasks();
+  const { companies } = useCompanies();
   const [searchQuery, setSearchQuery] = useState("");
   const [view, setView] = useState<"list" | "kanban">("list");
   const [taskToComplete, setTaskToComplete] = useState<Task | null>(null);
+  const [showNewTask, setShowNewTask] = useState(false);
 
   const filteredTasks = tasks.filter(
     (t) =>
@@ -59,6 +62,12 @@ export default function TareasPage() {
 
   return (
     <>
+      <NewTaskDialog
+        open={showNewTask}
+        onClose={() => setShowNewTask(false)}
+        onCreateTask={createTask}
+        companies={companies}
+      />
       <div>
         <h1 className="text-xl sm:text-2xl font-bold text-foreground">Tareas</h1>
         <p className="text-xs sm:text-sm text-muted-foreground">Organiza y controla tu trabajo diario</p>
@@ -95,7 +104,7 @@ export default function TareasPage() {
               </button>
             </div>
 
-            <Button size="sm" className="rounded-full shadow-md shadow-primary/25 gap-1.5 h-8 px-3 text-xs">
+            <Button size="sm" className="rounded-full shadow-md shadow-primary/25 gap-1.5 h-8 px-3 text-xs" onClick={() => setShowNewTask(true)}>
               <Plus className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Nueva</span>
             </Button>
@@ -189,7 +198,7 @@ function KanbanColumn({
   };
 
   return (
-    <div className="snap-start shrink-0 w-[280px] sm:w-auto space-y-2.5">
+    <div className="snap-start shrink-0 w-70 sm:w-auto space-y-2.5">
       <div className="flex items-center gap-2 px-1">
         <div className={cn("h-2 w-2 rounded-full", colorMap[color].dot)} />
         <h3 className="text-xs sm:text-sm font-semibold text-foreground">{title}</h3>

@@ -96,7 +96,7 @@ export function TaskActionDialog({ task, open, onClose, onChangeStatus, onAddObs
         scheduledTime: new Date(reminderTime).toISOString(),
         repeat: reminderRepeat,
         repeatIntervalMs: 180000,
-        recipientPhone: "+584121234567", // Daniela's phone - will be configurable
+        recipientPhone: "+571234567890",
       });
     }
     handleClose();
@@ -147,13 +147,30 @@ export function TaskActionDialog({ task, open, onClose, onChangeStatus, onAddObs
         {/* Observations history */}
         {task.observations && task.observations.length > 0 && (
           <div className="px-5 pb-2">
-            <div className="max-h-24 overflow-y-auto rounded-lg bg-muted/30 border border-border/30 p-2 space-y-1.5">
-              {task.observations.slice(-3).map((obs) => {
+            <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Historial</p>
+            <div className="max-h-32 overflow-y-auto rounded-xl bg-muted/30 border border-border/30 p-2 space-y-2">
+              {[...task.observations].reverse().map((obs, i) => {
+                const isStatusChange = obs.text.startsWith("Estado cambiado") || obs.text === "Tarea completada" || obs.text === "Tarea editada";
                 const obsStatus = statusOptions.find((s) => s.value === obs.status);
                 return (
                   <div key={obs.id} className="flex items-start gap-1.5">
-                    <div className={cn("h-1.5 w-1.5 rounded-full mt-1.5 shrink-0", obsStatus?.color.replace("text-", "bg-") || "bg-violet-400")} />
-                    <div className="min-w-0">
+                    <div className={cn(
+                      "h-1.5 w-1.5 rounded-full mt-1.5 shrink-0",
+                      isStatusChange
+                        ? (obsStatus?.color.replace("text-", "bg-") || "bg-violet-400")
+                        : "bg-orange-400"
+                    )} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1 mb-0.5">
+                        {isStatusChange && (
+                          <span className="text-[8px] font-semibold text-muted-foreground bg-muted px-1 py-0.5 rounded">
+                            {obsStatus?.label ?? "cambio"}
+                          </span>
+                        )}
+                        {!isStatusChange && i === 0 && (
+                          <span className="text-[8px] font-semibold text-orange-600 bg-orange-50 px-1 py-0.5 rounded">última obs.</span>
+                        )}
+                      </div>
                       <p className="text-[10px] text-foreground leading-tight">{obs.text}</p>
                       <p className="text-[9px] text-muted-foreground/60">
                         {new Date(obs.date).toLocaleDateString("es", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}

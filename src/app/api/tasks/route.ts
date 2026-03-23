@@ -32,7 +32,7 @@ export async function POST(req: Request) {
       status: body.status || "todo",
       recurrence: body.recurrence || "none",
       dueDate: new Date(body.dueDate),
-      companyId: body.companyId,
+      ...(body.companyId ? { companyId: body.companyId } : {}),
       userId: session.userId,
     },
     include: { observations: true, company: true },

@@ -12,6 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { NewCompanyDialog } from "@/components/popups/new-company-dialog";
+import { sendWAMessage } from "@/lib/whatsapp-client";
 import {
   ArrowLeft,
   Building2,
@@ -32,6 +34,8 @@ import {
   DollarSign,
   FileText,
   TrendingUp,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -64,11 +68,15 @@ export default function EmpresaDetallePage() {
   const router = useRouter();
   const companyId = params.id as string;
   const { tasks: allTasks, updateTaskStatus, addObservation, updateTask, createTask } = useTasks();
-  const { companies: companiesList } = useCompanies();
+  const { companies: companiesList, updateCompany, deleteCompany } = useCompanies();
   const { accounts: companyAR, createAR } = useAccountsReceivable(companyId);
   const company = companiesList.find((c) => c.id === companyId);
   const companyTasks = allTasks.filter((t) => t.companyId === companyId);
 
+  const [showEdit, setShowEdit] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [sendingResumen, setSendingResumen] = useState(false);
+  const [resumenResult, setResumenResult] = useState<string | null>(null);
   const [mainTab, setMainTab] = useState<MainTab>("tareas");
   const [filter, setFilter] = useState<FilterStatus>("all");
   const [arFilter, setArFilter] = useState<ARFilter>("all");
@@ -127,8 +135,63 @@ export default function EmpresaDetallePage() {
     setShowNewAR(false);
   };
 
+  const handleDelete = async () => {
+    await deleteCompany(companyId);
+    router.push("/empresas");
+  };
+
+  const handleSendResumen = async () => {
+    if (!company) return;
+    setSendingResumen(true);
+    setResumenResult(null);
+
+    const pending = companyTasks.filter((t) => t.status === "todo");
+    const inProg = companyTasks.filter((t) => t.status === "in_progress");
+    const done = companyTasks.filter((t) => t.status === "done");
+
+    const formatTask = (t: typeof companyTasks[0]) => {
+      const lastObs = t.observations && t.observations.length > 0
+        ? `\n   📝 ${t.observations[t.observations.length - 1].text}`
+        : "";
+      const due = new Date(t.dueDate).toLocaleDateString("es", { day: "2-digit", month: "short" });
+      const prio = t.priority === "high" ? "🔴" : t.priority === "medium" ? "🟡" : "🟢";
+      return `${prio} ${t.title} (vence ${due})${lastObs}`;
+    };
+
+    let msg = `📊 *Resumen de ${company.name}*\n`;
+    msg += `━━━━━━━━━━━━━━━━━━\n`;
+    if (inProg.length > 0) {
+      msg += `\n🔄 *En progreso (${inProg.length})*\n${inProg.map(formatTask).join("\n")}\n`;
+    }
+    if (pending.length > 0) {
+      msg += `\n⏳ *Pendientes (${pending.length})*\n${pending.map(formatTask).join("\n")}\n`;
+    }
+    if (done.length > 0) {
+      msg += `\n✅ *Completadas (${done.length})*\n${done.map((t) => `• ${t.title}`).join("\n")}\n`;
+    }
+    msg += `\n━━━━━━━━━━━━━━━━━━\nTotal: ${companyTasks.length} tareas`;
+
+    try {
+      const sent = await sendWAMessage(company.phone, msg);
+      setResumenResult(sent ? "✅ Resumen enviado a " + company.contactName : "❌ No se pudo enviar. Verifica la conexión de WhatsApp.");
+    } catch {
+      setResumenResult("❌ Error al enviar el resumen.");
+    } finally {
+      setSendingResumen(false);
+      setTimeout(() => setResumenResult(null), 4000);
+    }
+  };
+
   return (
     <>
+      <NewCompanyDialog
+        open={showEdit}
+        onClose={() => setShowEdit(false)}
+        mode="edit"
+        initialData={company ? { name: company.name, rif: company.rif, phone: company.phone, contactName: company.contactName } : undefined}
+        onCreate={async (data) => { await updateCompany(companyId, data); }}
+      />
+
       {/* Header */}
       <div className="flex items-start gap-3">
         <button onClick={() => router.push("/empresas")} className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-card border border-border/50 hover:bg-muted transition-colors">
@@ -137,6 +200,22 @@ export default function EmpresaDetallePage() {
         <div className="flex-1 min-w-0">
           <h1 className="text-lg sm:text-2xl font-bold text-foreground truncate">{company.name}</h1>
           <p className="text-[11px] sm:text-sm text-muted-foreground">{company.rif}</p>
+        </div>
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <button onClick={() => setShowEdit(true)} className="flex h-8 w-8 items-center justify-center rounded-full bg-card border border-border/50 hover:bg-violet-50 hover:border-violet-200 transition-colors">
+            <Pencil className="h-3.5 w-3.5 text-violet-500" />
+          </button>
+          {!showDeleteConfirm ? (
+            <button onClick={() => setShowDeleteConfirm(true)} className="flex h-8 w-8 items-center justify-center rounded-full bg-card border border-border/50 hover:bg-rose-50 hover:border-rose-200 transition-colors">
+              <Trash2 className="h-3.5 w-3.5 text-rose-500" />
+            </button>
+          ) : (
+            <div className="flex items-center gap-1 bg-rose-50 border border-rose-200 rounded-full px-2 py-1">
+              <span className="text-[10px] text-rose-700 font-medium">¿Eliminar?</span>
+              <button onClick={handleDelete} className="text-[10px] font-bold text-rose-700 hover:text-rose-900 px-1">Sí</button>
+              <button onClick={() => setShowDeleteConfirm(false)} className="text-[10px] text-muted-foreground hover:text-foreground px-1">No</button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -174,10 +253,21 @@ export default function EmpresaDetallePage() {
                 </div>
                 <Switch checked={dailySummary} onCheckedChange={setDailySummary} />
               </div>
-              <Button variant="outline" size="sm" className="rounded-full gap-1 text-emerald-700 border-emerald-200 hover:bg-emerald-50 h-6 text-[10px] px-3" onClick={() => alert("Enviando resumen...")}>
-                <Send className="h-2.5 w-2.5" />
-                Enviar resumen
-              </Button>
+              <div className="space-y-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full gap-1 text-emerald-700 border-emerald-200 hover:bg-emerald-50 h-6 text-[10px] px-3"
+                  onClick={handleSendResumen}
+                  disabled={sendingResumen}
+                >
+                  <Send className="h-2.5 w-2.5" />
+                  {sendingResumen ? "Enviando..." : "Enviar resumen"}
+                </Button>
+                {resumenResult && (
+                  <p className="text-[9px] text-muted-foreground">{resumenResult}</p>
+                )}
+              </div>
             </div>
 
             {/* Right: Stats */}

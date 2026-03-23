@@ -29,9 +29,15 @@ function getFirstDayOfMonth(year: number, month: number) {
 }
 
 const priorityDot: Record<string, string> = {
-  high: "bg-violet-600",
-  medium: "bg-violet-400",
+  high: "bg-rose-500",
+  medium: "bg-orange-400",
   low: "bg-violet-300",
+};
+
+const priorityConfig: Record<string, { badge: string; bg: string; label: string }> = {
+  high:   { badge: "bg-rose-100 text-rose-700",   bg: "bg-rose-50/80",   label: "Alta" },
+  medium: { badge: "bg-orange-100 text-orange-700", bg: "bg-orange-50/50", label: "Media" },
+  low:    { badge: "bg-violet-50 text-violet-600",  bg: "bg-muted/30",     label: "Baja" },
 };
 
 const statusIcon: Record<string, { icon: typeof Circle; color: string }> = {
@@ -124,7 +130,7 @@ export default function CalendarioPage() {
             {/* Days grid */}
             <div className="grid grid-cols-7 gap-0.5 sm:gap-1 px-1.5 sm:px-2 pb-2 sm:pb-3">
               {Array.from({ length: firstDay }).map((_, i) => (
-                <div key={`empty-${i}`} className="aspect-square p-1" />
+                <div key={`empty-${i}`} className="min-h-[3rem] sm:min-h-[5rem] p-1" />
               ))}
 
               {Array.from({ length: daysInMonth }).map((_, i) => {
@@ -140,9 +146,9 @@ export default function CalendarioPage() {
                     key={day}
                     onClick={() => setSelectedDay(day)}
                     className={cn(
-                      "aspect-square rounded-xl sm:rounded-2xl p-0.5 sm:p-1.5 flex flex-col items-center justify-start gap-0 sm:gap-0.5 transition-all duration-200 relative",
+                      "min-h-[3rem] sm:min-h-[5rem] rounded-xl sm:rounded-2xl p-1 sm:p-1.5 flex flex-col items-start gap-0.5 transition-all duration-200 text-left w-full",
                       isSelected
-                        ? "bg-violet-600 text-white shadow-lg shadow-violet-300/50 scale-105"
+                        ? "bg-violet-600 text-white shadow-lg shadow-violet-300/50"
                         : isToday
                         ? "bg-violet-100 text-violet-700"
                         : isWeekend
@@ -150,16 +156,36 @@ export default function CalendarioPage() {
                         : "hover:bg-violet-50/60"
                     )}
                   >
-                    <span className={cn("text-xs sm:text-sm font-semibold leading-none mt-1", isSelected ? "text-white" : isToday ? "text-violet-700" : isWeekend ? "text-violet-400" : "text-foreground")}>
+                    <span className={cn(
+                      "text-[11px] sm:text-sm font-semibold leading-none",
+                      isSelected ? "text-white" : isToday ? "text-violet-700" : isWeekend ? "text-violet-400" : "text-foreground"
+                    )}>
                       {day}
                     </span>
-                    {dayTasks.length > 0 && (
-                      <div className="flex gap-0.5 mt-auto mb-0.5 sm:mb-1">
-                        {dayTasks.slice(0, 3).map((t) => (
-                          <div key={t.id} className={cn("h-1 w-1 sm:h-1.5 sm:w-1.5 rounded-full", isSelected ? "bg-white/80" : priorityDot[t.priority])} />
-                        ))}
-                      </div>
-                    )}
+                    <div className="flex flex-col gap-0.5 w-full mt-0.5">
+                      {dayTasks.slice(0, 2).map((t) => (
+                        <div
+                          key={t.id}
+                          className={cn(
+                            "rounded px-1 py-0.5 text-[8px] sm:text-[9px] font-medium leading-tight truncate w-full",
+                            isSelected
+                              ? "bg-white/20 text-white"
+                              : t.priority === "high"
+                              ? "bg-rose-100 text-rose-700"
+                              : t.priority === "medium"
+                              ? "bg-orange-100 text-orange-700"
+                              : "bg-violet-100 text-violet-600"
+                          )}
+                        >
+                          {t.title}
+                        </div>
+                      ))}
+                      {dayTasks.length > 2 && (
+                        <span className={cn("text-[8px] sm:text-[9px] font-medium pl-0.5", isSelected ? "text-white/70" : "text-muted-foreground")}>
+                          +{dayTasks.length - 2} más
+                        </span>
+                      )}
+                    </div>
                   </button>
                 );
               })}
@@ -167,7 +193,7 @@ export default function CalendarioPage() {
 
             {/* Legend */}
             <div className="flex items-center justify-center gap-3 sm:gap-4 px-4 py-2 sm:py-3 border-t border-border/30 bg-muted/20">
-              {[{ c: "bg-violet-600", l: "Alta" }, { c: "bg-violet-400", l: "Media" }, { c: "bg-violet-300", l: "Baja" }].map((x) => (
+              {[{ c: "bg-rose-500", l: "Alta" }, { c: "bg-orange-400", l: "Media" }, { c: "bg-violet-300", l: "Baja" }].map((x) => (
                 <div key={x.l} className="flex items-center gap-1">
                   <div className={cn("h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full", x.c)} />
                   <span className="text-[9px] sm:text-[10px] text-muted-foreground">{x.l}</span>
@@ -224,22 +250,24 @@ export default function CalendarioPage() {
                 )}
                 {selectedDayTasks.map((task) => {
                   const StatusIcon = statusIcon[task.status].icon;
+                  const pCfg = priorityConfig[task.priority];
                   return (
-                    <div key={task.id} className={cn("rounded-xl sm:rounded-2xl p-2.5 sm:p-3 transition-all hover:shadow-sm", task.status === "done" ? "bg-emerald-50/50" : task.priority === "high" ? "bg-violet-50/80" : "bg-muted/30")}>
+                    <div
+                      key={task.id}
+                      onClick={() => setTaskToComplete(task)}
+                      className={cn(
+                        "rounded-xl sm:rounded-2xl p-2.5 sm:p-3 transition-all hover:shadow-md cursor-pointer border border-transparent hover:border-border/50",
+                        task.status === "done" ? "bg-emerald-50/50 opacity-70" : pCfg.bg
+                      )}
+                    >
                       <div className="flex items-start gap-2">
-                        <button
-                          className="shrink-0 hover:scale-110 transition-transform"
-                          onClick={() => { if (task.status !== "done") setTaskToComplete(task); }}
-                          title={task.status !== "done" ? "Marcar como completada" : undefined}
-                        >
-                          <StatusIcon className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4 mt-0.5", statusIcon[task.status].color, task.status === "in_progress" && "animate-spin")} />
-                        </button>
+                        <StatusIcon className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4 mt-0.5 shrink-0", statusIcon[task.status].color, task.status === "in_progress" && "animate-spin")} />
                         <div className="flex-1 min-w-0">
                           <p className={cn("text-xs sm:text-sm font-medium leading-tight", task.status === "done" && "line-through text-muted-foreground")}>{task.title}</p>
-                          <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">{task.companyName}</p>
+                          <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">{task.companyName ?? "Tarea individual"}</p>
                           <div className="flex items-center gap-1.5 mt-1">
-                            <span className={cn("text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full", task.priority === "high" ? "bg-violet-100 text-violet-700" : task.priority === "medium" ? "bg-violet-50 text-violet-600" : "bg-violet-50/50 text-violet-500")}>
-                              {task.priority === "high" ? "Alta" : task.priority === "medium" ? "Media" : "Baja"}
+                            <span className={cn("text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full", pCfg.badge)}>
+                              {pCfg.label}
                             </span>
                             {task.recurrence !== "none" && (
                               <span className="text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-violet-50 text-violet-500 flex items-center gap-0.5">

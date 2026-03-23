@@ -131,7 +131,7 @@ export default function WhatsAppPage() {
       id: String(++msgId),
       type: "morning",
       recipient: "Daniela (tu)",
-      recipientPhone: "+584121234567",
+      recipientPhone: "+571234567890",
       date: todayFormatted,
       time: "8:00 AM",
       status: "scheduled",
@@ -151,7 +151,7 @@ export default function WhatsAppPage() {
         id: String(++msgId),
         type: "alert",
         recipient: "Daniela (tu)",
-        recipientPhone: "+584121234567",
+        recipientPhone: "+571234567890",
         date: todayFormatted,
         time: "10:30 AM",
         status: "scheduled",
@@ -191,7 +191,7 @@ export default function WhatsAppPage() {
       id: String(++msgId),
       type: "evening",
       recipient: "Daniela (tu)",
-      recipientPhone: "+584121234567",
+      recipientPhone: "+571234567890",
       date: todayFormatted,
       time: "6:00 PM",
       status: "scheduled",
@@ -250,7 +250,7 @@ export default function WhatsAppPage() {
         id: `rem-msg-${notif.id}`,
         type: "reminder",
         recipient: "Daniela (tu)",
-        recipientPhone: notif.reminder.recipientPhone || "+584121234567",
+        recipientPhone: notif.reminder.recipientPhone || "+571234567890",
         date: new Date(notif.firedAt).toLocaleDateString("es", { day: "2-digit", month: "long", year: "numeric" }),
         time: new Date(notif.firedAt).toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit" }),
         status: "sent",
@@ -355,7 +355,7 @@ export default function WhatsAppPage() {
                   type="text"
                   value={testPhone}
                   onChange={(e) => setTestPhone(e.target.value)}
-                  placeholder="Numero de WhatsApp (ej: +584121234567)"
+                  placeholder="300 0000000 (sin indicativo)"
                   className="flex-1 rounded-lg border border-violet-200 bg-white px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300"
                 />
                 <Button
@@ -371,7 +371,7 @@ export default function WhatsAppPage() {
                         taskId: pendingTask.id,
                         taskTitle: pendingTask.title,
                         companyName: pendingTask.companyName || "Empresa",
-                        phone: testPhone,
+                        phone: testPhone.startsWith("+57") ? testPhone : `+57${testPhone.replace(/^0+/, "")}`,
                         message: "Prueba de recordatorio - Responde 'si' para completar la tarea",
                       });
                       setTestResult(sent ? "Enviado! Responde 'si' en WhatsApp para ver como se tacha la tarea." : "Error al enviar. Verifica la conexion.");

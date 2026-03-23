@@ -23,11 +23,11 @@ export function StatsCards() {
   ];
 
   return (
-    <div className="grid grid-cols-4 gap-1 sm:gap-1.5">
+    <div className="flex flex-row justify-start gap-1.5">
       {statItems.map((item) => (
         <div
           key={item.label}
-          className="flex flex-col items-center justify-center rounded-2xl bg-card p-2 sm:p-3 shadow-sm border border-border/50 hover:shadow-md transition-shadow aspect-square max-h-24"
+          className="flex flex-col items-center justify-center rounded-2xl bg-card p-2 sm:p-3 shadow-sm border border-border/50 hover:shadow-md transition-shadow aspect-square max-h-24 w-20"
         >
           <div className={`flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-xl mb-1 ${item.bg}`}>
             <item.icon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${item.color}`} />

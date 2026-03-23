@@ -6,12 +6,12 @@ import { Building2, ArrowRight, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-const cardStyles: Record<string, { bg: string; iconBg: string; dot: string }> = {
-  "1": { bg: "from-orange-100/80 via-amber-50 to-orange-50", iconBg: "bg-white/70 text-orange-500", dot: "bg-orange-400" },
-  "2": { bg: "from-rose-100/80 via-pink-50 to-rose-50", iconBg: "bg-white/70 text-rose-500", dot: "bg-rose-400" },
-  "3": { bg: "from-emerald-100/80 via-teal-50 to-emerald-50", iconBg: "bg-white/70 text-emerald-500", dot: "bg-emerald-400" },
-  "4": { bg: "from-orange-100/80 via-amber-50 to-orange-50", iconBg: "bg-white/70 text-orange-500", dot: "bg-orange-400" },
-};
+const cardStyles = [
+  { bg: "from-emerald-100/80 via-teal-50 to-emerald-50", iconBg: "bg-white/70 text-emerald-500", dot: "bg-emerald-400" },
+  { bg: "from-orange-100/80 via-amber-50 to-orange-50", iconBg: "bg-white/70 text-orange-500", dot: "bg-orange-400" },
+  { bg: "from-rose-100/80 via-pink-50 to-rose-50", iconBg: "bg-white/70 text-rose-500", dot: "bg-rose-400" },
+  { bg: "from-emerald-100/80 via-teal-50 to-emerald-50", iconBg: "bg-white/70 text-emerald-500", dot: "bg-emerald-400" },
+];
 
 export function CompanyCards() {
   const { tasks } = useTasks();
@@ -31,8 +31,8 @@ export function CompanyCards() {
 
       {/* Horizontal scroll on mobile, grid on desktop */}
       <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory -mx-1 px-1 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:overflow-visible sm:pb-0 sm:mx-0 sm:px-0">
-        {companies.map((company) => {
-          const style = cardStyles[company.id] || cardStyles["1"];
+        {companies.map((company, index) => {
+          const style = cardStyles[index % cardStyles.length];
           const companyTasks = tasks.filter((t) => t.companyId === company.id);
           const pending = companyTasks.filter((t) => t.status !== "done");
           const progress = company.tasksTotal > 0
@@ -64,7 +64,12 @@ export function CompanyCards() {
                     {company.tasksCompleted}/{company.tasksTotal} completadas
                   </p>
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] sm:text-[11px] font-bold text-foreground bg-muted rounded-full px-2 py-0.5 sm:py-1">
+                    <span className={cn(
+                      "text-[10px] sm:text-[11px] font-bold rounded-full px-2 py-0.5 sm:py-1",
+                      progress >= 67 ? "bg-emerald-100 text-emerald-700" :
+                      progress >= 34 ? "bg-orange-100 text-orange-700" :
+                      "bg-rose-100 text-rose-700"
+                    )}>
                       {progress}%
                     </span>
                     <span className="inline-flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center bg-foreground text-card rounded-full group-hover:bg-primary transition-colors">
