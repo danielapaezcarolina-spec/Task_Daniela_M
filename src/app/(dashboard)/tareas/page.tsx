@@ -53,7 +53,7 @@ export default function TareasPage() {
   const filteredTasks = tasks.filter(
     (t) =>
       t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.companyName.toLowerCase().includes(searchQuery.toLowerCase())
+      (t.companyName || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const todoTasks = filteredTasks.filter((t) => t.status === "todo");

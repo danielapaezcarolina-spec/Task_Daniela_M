@@ -51,6 +51,21 @@ export interface AccountReceivable {
   status: "pending" | "partial" | "paid" | "overdue";
   amountPaid: number;
   notes?: string;
+  company?: { id: string; name: string };
+}
+
+export interface PersonalLoan {
+  id: string;
+  borrower: string;
+  phone?: string;
+  concept: string;
+  amount: number;
+  currency: "USD" | "BS" | "COP";
+  loanDate: string;
+  dueDate?: string;
+  status: "pending" | "partial" | "paid";
+  amountPaid: number;
+  notes?: string;
 }
 
 export interface AppUser {

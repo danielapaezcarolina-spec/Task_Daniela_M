@@ -19,6 +19,7 @@ model User {
   companies     Company[]
   tasks         Task[]
   reminders     Reminder[]
+  personalLoans PersonalLoan[]
   waMessages    WhatsAppMessage[]
 }
 
@@ -101,6 +102,25 @@ model Reminder {
 
   taskId String
   task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PersonalLoan {
+  id           String    @id @default(cuid())
+  borrower     String
+  phone        String?
+  concept      String
+  amount       Float
+  currency     String    @default("USD") // USD, BS, COP
+  loanDate     DateTime
+  dueDate      DateTime?
+  status       String    @default("pending") // pending, partial, paid
+  amountPaid   Float     @default(0)
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)

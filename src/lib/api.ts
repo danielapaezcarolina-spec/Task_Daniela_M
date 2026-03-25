@@ -1,4 +1,4 @@
-import type { Task, Company, AccountReceivable, AppUser } from "./types";
+import type { Task, Company, AccountReceivable, PersonalLoan, AppUser } from "./types";
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -74,4 +74,14 @@ export const accountsReceivable = {
   update: (id: string, data: Record<string, unknown>) =>
     request<AccountReceivable>("/api/accounts-receivable", { method: "PATCH", body: JSON.stringify({ id, ...data }) }),
   delete: (id: string) => request<{ deleted: boolean }>(`/api/accounts-receivable?id=${id}`, { method: "DELETE" }),
+};
+
+// Personal Loans
+export const loans = {
+  list: () => request<PersonalLoan[]>("/api/loans"),
+  create: (data: Record<string, unknown>) =>
+    request<PersonalLoan>("/api/loans", { method: "POST", body: JSON.stringify(data) }),
+  update: (id: string, data: Record<string, unknown>) =>
+    request<PersonalLoan>("/api/loans", { method: "PATCH", body: JSON.stringify({ id, ...data }) }),
+  delete: (id: string) => request<{ deleted: boolean }>(`/api/loans?id=${id}`, { method: "DELETE" }),
 };

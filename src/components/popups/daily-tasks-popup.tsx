@@ -168,7 +168,7 @@ export function DailyTasksPopup({ open, onClose }: DailyTasksPopupProps) {
                   return (
                     <button
                       key={task.id}
-                      onClick={() => handleTaskClick(task.companyId)}
+                      onClick={() => handleTaskClick(task.companyId || "")}
                       className={cn(
                         "w-full text-left rounded-2xl border p-3.5 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 group",
                         priorityStyles[task.priority]

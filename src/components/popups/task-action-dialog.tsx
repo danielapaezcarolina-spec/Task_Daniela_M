@@ -91,7 +91,7 @@ export function TaskActionDialog({ task, open, onClose, onChangeStatus, onAddObs
       addReminder({
         taskId: task.id,
         taskTitle: task.title,
-        companyName: task.companyName,
+        companyName: task.companyName || "",
         message: observation,
         scheduledTime: new Date(reminderTime).toISOString(),
         repeat: reminderRepeat,

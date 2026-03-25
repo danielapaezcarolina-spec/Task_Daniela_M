@@ -9,7 +9,6 @@ export function useAccountsReceivable(companyId?: string) {
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
-    if (!companyId) return;
     try {
       const data = await arApi.list(companyId);
       setAccounts(data);

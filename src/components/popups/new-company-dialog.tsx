@@ -9,6 +9,7 @@ import { Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface CompanyFormData {
+  [key: string]: unknown;
   name: string;
   rif: string;
   phone: string;

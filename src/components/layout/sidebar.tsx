@@ -12,6 +12,7 @@ import {
   Bell,
   Settings,
   MessageCircle,
+  DollarSign,
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -21,6 +22,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/empresas", label: "Empresas", icon: Building2 },
+  { href: "/cobros", label: "Cobros", icon: DollarSign },
   { href: "/tareas", label: "Tareas", icon: CheckSquare },
   { href: "/calendario", label: "Calendario", icon: Calendar },
   { href: "/recordatorios", label: "Recordatorios", icon: Bell },
