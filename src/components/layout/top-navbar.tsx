@@ -11,6 +11,7 @@ import {
   Calendar,
   Bell,
   MessageCircle,
+  DollarSign,
   Search,
   Plus,
   LogOut,
@@ -21,6 +22,7 @@ import { Button } from "@/components/ui/button";
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/empresas", label: "Empresas", icon: Building2 },
+  { href: "/cobros", label: "Cobros", icon: DollarSign },
   { href: "/tareas", label: "Tareas", icon: CheckSquare },
   { href: "/calendario", label: "Calendario", icon: Calendar },
   { href: "/recordatorios", label: "Recordatorios", icon: Bell },

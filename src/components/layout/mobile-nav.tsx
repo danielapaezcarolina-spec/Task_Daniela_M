@@ -8,15 +8,16 @@ import {
   Building2,
   CheckSquare,
   Calendar,
+  DollarSign,
   MessageCircle,
 } from "lucide-react";
 
 const mobileNavItems = [
   { href: "/", label: "Inicio", icon: LayoutDashboard },
   { href: "/empresas", label: "Empresas", icon: Building2 },
+  { href: "/cobros", label: "Cobros", icon: DollarSign },
   { href: "/tareas", label: "Tareas", icon: CheckSquare },
   { href: "/calendario", label: "Calendario", icon: Calendar },
-  { href: "/whatsapp", label: "WhatsApp", icon: MessageCircle },
 ];
 
 export function MobileNav() {
