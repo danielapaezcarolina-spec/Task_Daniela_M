@@ -45,7 +45,7 @@ export interface AccountReceivable {
   client: string;
   concept: string;
   amount: number;
-  currency: "USD" | "BS";
+  currency: "COP" | "USD";
   issueDate: string;
   dueDate: string;
   status: "pending" | "partial" | "paid" | "overdue";
@@ -60,7 +60,7 @@ export interface PersonalLoan {
   phone?: string;
   concept: string;
   amount: number;
-  currency: "USD" | "BS" | "COP";
+  currency: "COP" | "USD";
   loanDate: string;
   dueDate?: string;
   status: "pending" | "partial" | "paid";

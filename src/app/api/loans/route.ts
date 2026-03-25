@@ -27,7 +27,7 @@ export async function POST(req: Request) {
       phone: body.phone || null,
       concept: body.concept,
       amount: parseFloat(body.amount),
-      currency: body.currency || "USD",
+      currency: body.currency || "COP",
       loanDate: new Date(body.loanDate || new Date()),
       dueDate: body.dueDate ? new Date(body.dueDate) : null,
       status: body.status || "pending",

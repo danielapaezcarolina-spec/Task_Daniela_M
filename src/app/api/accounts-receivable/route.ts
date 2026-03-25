@@ -27,7 +27,7 @@ export async function POST(req: Request) {
       client: body.client,
       concept: body.concept,
       amount: parseFloat(body.amount),
-      currency: body.currency || "USD",
+      currency: body.currency || "COP",
       issueDate: new Date(body.issueDate || new Date()),
       dueDate: new Date(body.dueDate),
       status: body.status || "pending",

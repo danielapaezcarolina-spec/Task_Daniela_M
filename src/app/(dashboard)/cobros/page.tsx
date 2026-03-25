@@ -25,7 +25,7 @@ import {
   HandCoins,
   Pencil,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatCOP } from "@/lib/utils";
 
 type MainTab = "cuentas" | "prestamos";
 type ARFilter = "all" | "pending" | "partial" | "paid" | "overdue";
@@ -64,7 +64,7 @@ export default function CobrosPage() {
     client: "",
     concept: "",
     amount: "",
-    currency: "USD" as "USD" | "BS",
+    currency: "COP" as "COP" | "USD",
     dueDate: new Date().toISOString().split("T")[0],
   });
 
@@ -74,7 +74,7 @@ export default function CobrosPage() {
     phone: "",
     concept: "",
     amount: "",
-    currency: "USD" as "USD" | "BS" | "COP",
+    currency: "COP" as "COP" | "USD",
     loanDate: new Date().toISOString().split("T")[0],
     dueDate: "",
     notes: "",
@@ -99,7 +99,7 @@ export default function CobrosPage() {
       ...newAR,
       issueDate: new Date().toISOString(),
     });
-    setNewAR({ companyId: "", client: "", concept: "", amount: "", currency: "USD", dueDate: new Date().toISOString().split("T")[0] });
+    setNewAR({ companyId: "", client: "", concept: "", amount: "", currency: "COP", dueDate: new Date().toISOString().split("T")[0] });
     setShowNewAR(false);
   };
 
@@ -109,7 +109,7 @@ export default function CobrosPage() {
       ...newLoan,
       dueDate: newLoan.dueDate || undefined,
     });
-    setNewLoan({ borrower: "", phone: "", concept: "", amount: "", currency: "USD", loanDate: new Date().toISOString().split("T")[0], dueDate: "", notes: "" });
+    setNewLoan({ borrower: "", phone: "", concept: "", amount: "", currency: "COP", loanDate: new Date().toISOString().split("T")[0], dueDate: "", notes: "" });
     setShowNewLoan(false);
   };
 
@@ -126,7 +126,7 @@ export default function CobrosPage() {
       notes: newLoan.notes || undefined,
     });
     setEditingLoan(null);
-    setNewLoan({ borrower: "", phone: "", concept: "", amount: "", currency: "USD", loanDate: new Date().toISOString().split("T")[0], dueDate: "", notes: "" });
+    setNewLoan({ borrower: "", phone: "", concept: "", amount: "", currency: "COP", loanDate: new Date().toISOString().split("T")[0], dueDate: "", notes: "" });
     setShowNewLoan(false);
   };
 
@@ -160,11 +160,7 @@ export default function CobrosPage() {
     return new Date(d).toLocaleDateString("es", { day: "numeric", month: "short", year: "numeric" });
   };
 
-  const formatCurrency = (amount: number, currency: string) => {
-    if (currency === "COP") return `$${amount.toLocaleString("es-CO")} COP`;
-    if (currency === "BS") return `Bs. ${amount.toFixed(2)}`;
-    return `$${amount.toFixed(2)}`;
-  };
+  const fmtMoney = (amount: number) => formatCOP(amount);
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -210,14 +206,14 @@ export default function CobrosPage() {
                 <DollarSign className="h-3.5 w-3.5" />
                 Por cobrar
               </div>
-              <p className="text-lg font-bold text-foreground">${totalPendingAR.toFixed(2)}</p>
+              <p className="text-lg font-bold text-foreground">{formatCOP(totalPendingAR)}</p>
             </div>
             <div className="rounded-xl border bg-card p-4">
               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
                 <TrendingUp className="h-3.5 w-3.5" />
                 Cobrado
               </div>
-              <p className="text-lg font-bold text-emerald-600">${totalCollectedAR.toFixed(2)}</p>
+              <p className="text-lg font-bold text-emerald-600">{formatCOP(totalCollectedAR)}</p>
             </div>
             <div className="rounded-xl border bg-card p-4">
               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
@@ -290,11 +286,11 @@ export default function CobrosPage() {
                     <Label className="text-xs">Moneda</Label>
                     <select
                       value={newAR.currency}
-                      onChange={(e) => setNewAR({ ...newAR, currency: e.target.value as "USD" | "BS" })}
+                      onChange={(e) => setNewAR({ ...newAR, currency: e.target.value as "COP" | "USD" })}
                       className="w-full mt-1 rounded-lg border border-input bg-background px-2 py-2 text-sm"
                     >
+                      <option value="COP">COP</option>
                       <option value="USD">USD</option>
-                      <option value="BS">BS</option>
                     </select>
                   </div>
                 </div>
@@ -331,9 +327,9 @@ export default function CobrosPage() {
                       )}
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="font-bold text-sm">{formatCurrency(ar.amount, ar.currency)}</p>
+                      <p className="font-bold text-sm">{fmtMoney(ar.amount)}</p>
                       {ar.amountPaid > 0 && (
-                        <p className="text-[11px] text-emerald-600">Pagado: {formatCurrency(ar.amountPaid, ar.currency)}</p>
+                        <p className="text-[11px] text-emerald-600">Pagado: {fmtMoney(ar.amountPaid)}</p>
                       )}
                       <p className="text-[11px] text-muted-foreground flex items-center gap-1 justify-end mt-0.5">
                         <Calendar className="h-3 w-3" />
@@ -371,14 +367,14 @@ export default function CobrosPage() {
                 <HandCoins className="h-3.5 w-3.5" />
                 Total prestado
               </div>
-              <p className="text-lg font-bold text-foreground">${totalLent.toFixed(2)}</p>
+              <p className="text-lg font-bold text-foreground">{formatCOP(totalLent)}</p>
             </div>
             <div className="rounded-xl border bg-card p-4">
               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
                 <TrendingUp className="h-3.5 w-3.5" />
                 Devuelto
               </div>
-              <p className="text-lg font-bold text-emerald-600">${totalRepaid.toFixed(2)}</p>
+              <p className="text-lg font-bold text-emerald-600">{formatCOP(totalRepaid)}</p>
             </div>
             <div className="rounded-xl border bg-card p-4">
               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
@@ -408,7 +404,7 @@ export default function CobrosPage() {
                 </button>
               ))}
             </div>
-            <Button size="sm" onClick={() => { setEditingLoan(null); setNewLoan({ borrower: "", phone: "", concept: "", amount: "", currency: "USD", loanDate: new Date().toISOString().split("T")[0], dueDate: "", notes: "" }); setShowNewLoan(true); }} className="rounded-full gap-1.5">
+            <Button size="sm" onClick={() => { setEditingLoan(null); setNewLoan({ borrower: "", phone: "", concept: "", amount: "", currency: "COP", loanDate: new Date().toISOString().split("T")[0], dueDate: "", notes: "" }); setShowNewLoan(true); }} className="rounded-full gap-1.5">
               <Plus className="h-4 w-4" /> Nuevo prestamo
             </Button>
           </div>
@@ -442,12 +438,11 @@ export default function CobrosPage() {
                     <Label className="text-xs">Moneda</Label>
                     <select
                       value={newLoan.currency}
-                      onChange={(e) => setNewLoan({ ...newLoan, currency: e.target.value as "USD" | "BS" | "COP" })}
+                      onChange={(e) => setNewLoan({ ...newLoan, currency: e.target.value as "COP" | "USD" })}
                       className="w-full mt-1 rounded-lg border border-input bg-background px-2 py-2 text-sm"
                     >
-                      <option value="USD">USD</option>
-                      <option value="BS">BS</option>
                       <option value="COP">COP</option>
+                      <option value="USD">USD</option>
                     </select>
                   </div>
                 </div>
@@ -501,12 +496,12 @@ export default function CobrosPage() {
                       )}
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="font-bold text-sm">{formatCurrency(loan.amount, loan.currency)}</p>
+                      <p className="font-bold text-sm">{fmtMoney(loan.amount)}</p>
                       {loan.amountPaid > 0 && (
-                        <p className="text-[11px] text-emerald-600">Devuelto: {formatCurrency(loan.amountPaid, loan.currency)}</p>
+                        <p className="text-[11px] text-emerald-600">Devuelto: {fmtMoney(loan.amountPaid)}</p>
                       )}
                       {loan.amount - loan.amountPaid > 0 && loan.amountPaid > 0 && (
-                        <p className="text-[11px] text-amber-600">Resta: {formatCurrency(loan.amount - loan.amountPaid, loan.currency)}</p>
+                        <p className="text-[11px] text-amber-600">Resta: {fmtMoney(loan.amount - loan.amountPaid)}</p>
                       )}
                       <p className="text-[11px] text-muted-foreground flex items-center gap-1 justify-end mt-0.5">
                         <Calendar className="h-3 w-3" />

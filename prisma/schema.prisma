@@ -77,7 +77,7 @@ model AccountReceivable {
   client     String
   concept    String
   amount     Float
-  currency   String   @default("USD") // USD, BS
+  currency   String   @default("COP") // COP, USD
   issueDate  DateTime
   dueDate    DateTime
   status     String   @default("pending") // pending, partial, paid, overdue
@@ -113,7 +113,7 @@ model PersonalLoan {
   phone        String?
   concept      String
   amount       Float
-  currency     String    @default("USD") // USD, BS, COP
+  currency     String    @default("COP") // COP, USD
   loanDate     DateTime
   dueDate      DateTime?
   status       String    @default("pending") // pending, partial, paid

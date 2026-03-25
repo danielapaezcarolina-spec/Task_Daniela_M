@@ -37,7 +37,7 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatCOP } from "@/lib/utils";
 
 type MainTab = "tareas" | "cuentas";
 type FilterStatus = "all" | "todo" | "in_progress" | "done";
@@ -85,7 +85,7 @@ export default function EmpresaDetallePage() {
   const [taskToComplete, setTaskToComplete] = useState<Task | null>(null);
   const [dailySummary, setDailySummary] = useState(company?.sendDailySummary ?? false);
   const [newTask, setNewTask] = useState({ title: "", description: "", priority: "medium" as Task["priority"], recurrence: "none" as RecurrenceType, dueDate: new Date().toISOString().split("T")[0] });
-  const [newAR, setNewAR] = useState({ client: "", concept: "", amount: "", currency: "USD" as "USD" | "BS", dueDate: new Date().toISOString().split("T")[0] });
+  const [newAR, setNewAR] = useState({ client: "", concept: "", amount: "", currency: "COP" as "COP" | "USD", dueDate: new Date().toISOString().split("T")[0] });
 
   if (!company) {
     return (
@@ -131,7 +131,7 @@ export default function EmpresaDetallePage() {
       currency: newAR.currency,
       dueDate: newAR.dueDate,
     });
-    setNewAR({ client: "", concept: "", amount: "", currency: "USD", dueDate: new Date().toISOString().split("T")[0] });
+    setNewAR({ client: "", concept: "", amount: "", currency: "COP", dueDate: new Date().toISOString().split("T")[0] });
     setShowNewAR(false);
   };
 
@@ -436,11 +436,11 @@ export default function EmpresaDetallePage() {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-2 sm:gap-3">
               <div className="rounded-2xl bg-card border border-border/50 p-3 sm:p-4 text-center">
-                <p className="text-lg sm:text-2xl font-bold text-violet-600">${totalPending.toLocaleString()}</p>
+                <p className="text-lg sm:text-2xl font-bold text-violet-600">{formatCOP(totalPending)}</p>
                 <p className="text-[9px] sm:text-[11px] text-muted-foreground">Por cobrar</p>
               </div>
               <div className="rounded-2xl bg-card border border-border/50 p-3 sm:p-4 text-center">
-                <p className="text-lg sm:text-2xl font-bold text-emerald-500">${totalCollected.toLocaleString()}</p>
+                <p className="text-lg sm:text-2xl font-bold text-emerald-500">{formatCOP(totalCollected)}</p>
                 <p className="text-[9px] sm:text-[11px] text-muted-foreground">Cobrado</p>
               </div>
               <div className="rounded-2xl bg-card border border-border/50 p-3 sm:p-4 text-center">
@@ -477,7 +477,7 @@ export default function EmpresaDetallePage() {
                     <div className="space-y-1.5">
                       <Label className="text-[10px] sm:text-xs font-medium">Moneda</Label>
                       <div className="flex gap-1">
-                        {(["USD", "BS"] as const).map((c) => (
+                        {(["COP", "USD"] as const).map((c) => (
                           <button key={c} onClick={() => setNewAR({ ...newAR, currency: c })} className={cn("flex-1 text-[10px] sm:text-[11px] font-medium py-1.5 rounded-lg transition-all", newAR.currency === c ? "bg-foreground text-card" : "bg-muted text-muted-foreground")}>
                             {c}
                           </button>
@@ -534,9 +534,9 @@ export default function EmpresaDetallePage() {
                               <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 truncate">{ar.concept}</p>
                             </div>
                             <div className="text-right shrink-0">
-                              <p className="text-xs sm:text-sm font-bold">{ar.currency} {ar.amount.toLocaleString()}</p>
+                              <p className="text-xs sm:text-sm font-bold">{formatCOP(ar.amount)}</p>
                               {ar.status === "partial" && (
-                                <p className="text-[10px] text-muted-foreground">Resta: {ar.currency} {remaining.toLocaleString()}</p>
+                                <p className="text-[10px] text-muted-foreground">Resta: {formatCOP(remaining)}</p>
                               )}
                             </div>
                           </div>
