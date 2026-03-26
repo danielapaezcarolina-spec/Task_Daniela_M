@@ -61,7 +61,6 @@ export default function CobrosPage() {
   // AR form state
   const [newAR, setNewAR] = useState({
     companyId: "",
-    client: "",
     concept: "",
     amount: "",
     currency: "COP" as "COP" | "USD",
@@ -94,12 +93,14 @@ export default function CobrosPage() {
   const filteredLoans = loanFilter === "all" ? loans : loans.filter((l) => l.status === loanFilter);
 
   const handleCreateAR = async () => {
-    if (!newAR.client.trim() || !newAR.concept.trim() || !newAR.amount || !newAR.companyId) return;
+    if (!newAR.concept.trim() || !newAR.amount || !newAR.companyId) return;
+    const selectedCompany = companies.find((c) => c.id === newAR.companyId);
     await createAR({
       ...newAR,
+      client: selectedCompany?.name || "",
       issueDate: new Date().toISOString(),
     });
-    setNewAR({ companyId: "", client: "", concept: "", amount: "", currency: "COP", dueDate: new Date().toISOString().split("T")[0] });
+    setNewAR({ companyId: "", concept: "", amount: "", currency: "COP", dueDate: new Date().toISOString().split("T")[0] });
     setShowNewAR(false);
   };
 
@@ -256,7 +257,7 @@ export default function CobrosPage() {
                 <button onClick={() => setShowNewAR(false)}><X className="h-4 w-4 text-muted-foreground" /></button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
+                <div className="sm:col-span-2">
                   <Label className="text-xs">Empresa</Label>
                   <select
                     value={newAR.companyId}
@@ -270,17 +271,14 @@ export default function CobrosPage() {
                   </select>
                 </div>
                 <div>
-                  <Label className="text-xs">Cliente</Label>
-                  <Input value={newAR.client} onChange={(e) => setNewAR({ ...newAR, client: e.target.value })} placeholder="Nombre del cliente" className="mt-1" />
-                </div>
-                <div>
                   <Label className="text-xs">Concepto</Label>
                   <Input value={newAR.concept} onChange={(e) => setNewAR({ ...newAR, concept: e.target.value })} placeholder="Concepto del cobro" className="mt-1" />
                 </div>
                 <div className="flex gap-2">
                   <div className="flex-1">
                     <Label className="text-xs">Monto</Label>
-                    <Input type="number" value={newAR.amount} onChange={(e) => setNewAR({ ...newAR, amount: e.target.value })} placeholder="0.00" className="mt-1" />
+                    <Input type="number" value={newAR.amount} onChange={(e) => setNewAR({ ...newAR, amount: e.target.value })} placeholder="100000" className="mt-1" />
+                    {newAR.amount && <p className="text-[10px] text-muted-foreground mt-0.5">{formatCOP(parseFloat(newAR.amount) || 0)}</p>}
                   </div>
                   <div className="w-20">
                     <Label className="text-xs">Moneda</Label>
@@ -313,18 +311,13 @@ export default function CobrosPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium text-sm">{ar.client}</span>
+                        <Building2 className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium text-sm">{ar.company?.name || ar.client}</span>
                         <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-medium border", arStatusConfig[ar.status].color)}>
                           {arStatusConfig[ar.status].label}
                         </span>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">{ar.concept}</p>
-                      {ar.company && (
-                        <div className="flex items-center gap-1 mt-1">
-                          <Building2 className="h-3 w-3 text-muted-foreground" />
-                          <span className="text-[11px] text-muted-foreground">{ar.company.name}</span>
-                        </div>
-                      )}
+                      <p className="text-xs text-muted-foreground mt-0.5 ml-6">{ar.concept}</p>
                     </div>
                     <div className="text-right shrink-0">
                       <p className="font-bold text-sm">{fmtMoney(ar.amount)}</p>
@@ -432,7 +425,8 @@ export default function CobrosPage() {
                 <div className="flex gap-2">
                   <div className="flex-1">
                     <Label className="text-xs">Monto</Label>
-                    <Input type="number" value={newLoan.amount} onChange={(e) => setNewLoan({ ...newLoan, amount: e.target.value })} placeholder="0.00" className="mt-1" />
+                    <Input type="number" value={newLoan.amount} onChange={(e) => setNewLoan({ ...newLoan, amount: e.target.value })} placeholder="100000" className="mt-1" />
+                    {newLoan.amount && <p className="text-[10px] text-muted-foreground mt-0.5">{formatCOP(parseFloat(newLoan.amount) || 0)}</p>}
                   </div>
                   <div className="w-24">
                     <Label className="text-xs">Moneda</Label>
