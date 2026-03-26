@@ -24,10 +24,12 @@ export function useAccountsReceivable(companyId?: string) {
   }, [refresh]);
 
   const createAR = useCallback(async (data: Record<string, unknown>) => {
-    const ar = await arApi.create({ ...data, companyId: data.companyId || companyId });
-    setAccounts((prev) => [...prev, ar]);
+    const finalCompanyId = data.companyId || companyId;
+    if (!finalCompanyId) throw new Error("companyId is required");
+    const ar = await arApi.create({ ...data, companyId: finalCompanyId });
+    await refresh();
     return ar;
-  }, [companyId]);
+  }, [companyId, refresh]);
 
   const updateAR = useCallback(async (id: string, data: Record<string, unknown>) => {
     const ar = await arApi.update(id, data);

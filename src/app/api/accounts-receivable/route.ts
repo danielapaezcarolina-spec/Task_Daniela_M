@@ -22,9 +22,13 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const body = await req.json();
 
+  if (!body.companyId) {
+    return NextResponse.json({ error: "companyId is required" }, { status: 400 });
+  }
+
   const account = await prisma.accountReceivable.create({
     data: {
-      client: body.client,
+      client: body.client || "",
       concept: body.concept,
       amount: parseFloat(body.amount),
       currency: body.currency || "COP",
@@ -35,6 +39,7 @@ export async function POST(req: Request) {
       notes: body.notes,
       companyId: body.companyId,
     },
+    include: { company: { select: { id: true, name: true } } },
   });
 
   return NextResponse.json(account);

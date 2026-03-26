@@ -93,15 +93,26 @@ export default function CobrosPage() {
   const filteredLoans = loanFilter === "all" ? loans : loans.filter((l) => l.status === loanFilter);
 
   const handleCreateAR = async () => {
-    if (!newAR.concept.trim() || !newAR.amount || !newAR.companyId) return;
-    const selectedCompany = companies.find((c) => c.id === newAR.companyId);
-    await createAR({
-      ...newAR,
-      client: selectedCompany?.name || "",
-      issueDate: new Date().toISOString(),
-    });
-    setNewAR({ companyId: "", concept: "", amount: "", currency: "COP", dueDate: new Date().toISOString().split("T")[0] });
-    setShowNewAR(false);
+    if (!newAR.concept.trim() || !newAR.amount || !newAR.companyId) {
+      console.log("AR validation failed:", { concept: newAR.concept, amount: newAR.amount, companyId: newAR.companyId });
+      return;
+    }
+    try {
+      const selectedCompany = companies.find((c) => c.id === newAR.companyId);
+      await createAR({
+        companyId: newAR.companyId,
+        client: selectedCompany?.name || "",
+        concept: newAR.concept,
+        amount: newAR.amount,
+        currency: newAR.currency,
+        dueDate: newAR.dueDate,
+        issueDate: new Date().toISOString(),
+      });
+      setNewAR({ companyId: "", concept: "", amount: "", currency: "COP", dueDate: new Date().toISOString().split("T")[0] });
+      setShowNewAR(false);
+    } catch (err) {
+      console.error("Error creating AR:", err);
+    }
   };
 
   const handleCreateLoan = async () => {
