@@ -24,7 +24,7 @@ export function useAccountsReceivable(companyId?: string) {
   }, [refresh]);
 
   const createAR = useCallback(async (data: Record<string, unknown>) => {
-    const ar = await arApi.create({ ...data, companyId });
+    const ar = await arApi.create({ ...data, companyId: data.companyId || companyId });
     setAccounts((prev) => [...prev, ar]);
     return ar;
   }, [companyId]);
