@@ -60,6 +60,8 @@ export default function CobrosPage() {
   const [creatingAR, setCreatingAR] = useState(false);
   const [creatingLoan, setCreatingLoan] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
+  const [arErrors, setArErrors] = useState<Record<string, boolean>>({});
+  const [loanErrors, setLoanErrors] = useState<Record<string, boolean>>({});
 
   // AR form state
   const [newAR, setNewAR] = useState({
@@ -96,7 +98,13 @@ export default function CobrosPage() {
   const filteredLoans = loanFilter === "all" ? loans : loans.filter((l) => l.status === loanFilter);
 
   const handleCreateAR = async () => {
-    if (!newAR.concept.trim() || !newAR.amount || !newAR.companyId || creatingAR) return;
+    if (creatingAR) return;
+    const errors: Record<string, boolean> = {};
+    if (!newAR.companyId) errors.companyId = true;
+    if (!newAR.concept.trim()) errors.concept = true;
+    if (!newAR.amount) errors.amount = true;
+    if (Object.keys(errors).length > 0) { setArErrors(errors); return; }
+    setArErrors({});
     setCreatingAR(true);
     try {
       const selectedCompany = companies.find((c) => c.id === newAR.companyId);
@@ -119,7 +127,13 @@ export default function CobrosPage() {
   };
 
   const handleCreateLoan = async () => {
-    if (!newLoan.borrower.trim() || !newLoan.concept.trim() || !newLoan.amount || creatingLoan) return;
+    if (creatingLoan) return;
+    const errors: Record<string, boolean> = {};
+    if (!newLoan.borrower.trim()) errors.borrower = true;
+    if (!newLoan.concept.trim()) errors.concept = true;
+    if (!newLoan.amount) errors.amount = true;
+    if (Object.keys(errors).length > 0) { setLoanErrors(errors); return; }
+    setLoanErrors({});
     setCreatingLoan(true);
     try {
       await createLoan({
@@ -282,11 +296,11 @@ export default function CobrosPage() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="sm:col-span-2">
-                  <Label className="text-xs">Empresa</Label>
+                  <Label className="text-xs">Empresa {arErrors.companyId && <span className="text-red-500">*</span>}</Label>
                   <select
                     value={newAR.companyId}
-                    onChange={(e) => setNewAR({ ...newAR, companyId: e.target.value })}
-                    className="w-full mt-1 rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                    onChange={(e) => { setNewAR({ ...newAR, companyId: e.target.value }); setArErrors((prev) => ({ ...prev, companyId: false })); }}
+                    className={cn("w-full mt-1 rounded-lg border bg-background px-3 py-2 text-sm", arErrors.companyId ? "border-red-500" : "border-input")}
                   >
                     <option value="">Seleccionar empresa...</option>
                     {companies.map((c) => (
@@ -295,19 +309,19 @@ export default function CobrosPage() {
                   </select>
                 </div>
                 <div>
-                  <Label className="text-xs">Concepto</Label>
-                  <Input value={newAR.concept} onChange={(e) => setNewAR({ ...newAR, concept: e.target.value })} placeholder="Concepto del cobro" className="mt-1" />
+                  <Label className="text-xs">Concepto {arErrors.concept && <span className="text-red-500">*</span>}</Label>
+                  <Input value={newAR.concept} onChange={(e) => { setNewAR({ ...newAR, concept: e.target.value }); setArErrors((prev) => ({ ...prev, concept: false })); }} placeholder="Concepto del cobro" className={cn("mt-1", arErrors.concept && "border-red-500")} />
                 </div>
                 <div className="flex gap-2">
                   <div className="flex-1">
-                    <Label className="text-xs">Monto</Label>
+                    <Label className="text-xs">Monto {arErrors.amount && <span className="text-red-500">*</span>}</Label>
                     <Input
                       type="text"
                       inputMode="numeric"
                       value={newAR.amount ? formatCOP(parseFloat(newAR.amount) || 0) : ""}
-                      onChange={(e) => setNewAR({ ...newAR, amount: e.target.value.replace(/[^0-9]/g, "") })}
+                      onChange={(e) => { setNewAR({ ...newAR, amount: e.target.value.replace(/[^0-9]/g, "") }); setArErrors((prev) => ({ ...prev, amount: false })); }}
                       placeholder="$0"
-                      className="mt-1"
+                      className={cn("mt-1", arErrors.amount && "border-red-500")}
                     />
                   </div>
                   <div className="w-20">
@@ -443,27 +457,27 @@ export default function CobrosPage() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <Label className="text-xs">Nombre de quien recibe</Label>
-                  <Input value={newLoan.borrower} onChange={(e) => setNewLoan({ ...newLoan, borrower: e.target.value })} placeholder="Nombre completo" className="mt-1" />
+                  <Label className="text-xs">Nombre de quien recibe {loanErrors.borrower && <span className="text-red-500">*</span>}</Label>
+                  <Input value={newLoan.borrower} onChange={(e) => { setNewLoan({ ...newLoan, borrower: e.target.value }); setLoanErrors((prev) => ({ ...prev, borrower: false })); }} placeholder="Nombre completo" className={cn("mt-1", loanErrors.borrower && "border-red-500")} />
                 </div>
                 <div>
                   <Label className="text-xs">Telefono (opcional)</Label>
                   <Input value={newLoan.phone} onChange={(e) => setNewLoan({ ...newLoan, phone: e.target.value })} placeholder="+57..." className="mt-1" />
                 </div>
                 <div>
-                  <Label className="text-xs">Concepto</Label>
-                  <Input value={newLoan.concept} onChange={(e) => setNewLoan({ ...newLoan, concept: e.target.value })} placeholder="Motivo del prestamo" className="mt-1" />
+                  <Label className="text-xs">Concepto {loanErrors.concept && <span className="text-red-500">*</span>}</Label>
+                  <Input value={newLoan.concept} onChange={(e) => { setNewLoan({ ...newLoan, concept: e.target.value }); setLoanErrors((prev) => ({ ...prev, concept: false })); }} placeholder="Motivo del prestamo" className={cn("mt-1", loanErrors.concept && "border-red-500")} />
                 </div>
                 <div className="flex gap-2">
                   <div className="flex-1">
-                    <Label className="text-xs">Monto</Label>
+                    <Label className="text-xs">Monto {loanErrors.amount && <span className="text-red-500">*</span>}</Label>
                     <Input
                       type="text"
                       inputMode="numeric"
                       value={newLoan.amount ? formatCOP(parseFloat(newLoan.amount) || 0) : ""}
-                      onChange={(e) => setNewLoan({ ...newLoan, amount: e.target.value.replace(/[^0-9]/g, "") })}
+                      onChange={(e) => { setNewLoan({ ...newLoan, amount: e.target.value.replace(/[^0-9]/g, "") }); setLoanErrors((prev) => ({ ...prev, amount: false })); }}
                       placeholder="$0"
-                      className="mt-1"
+                      className={cn("mt-1", loanErrors.amount && "border-red-500")}
                     />
                   </div>
                   <div className="w-24">
