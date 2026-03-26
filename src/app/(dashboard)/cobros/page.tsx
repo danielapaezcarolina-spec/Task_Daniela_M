@@ -57,6 +57,9 @@ export default function CobrosPage() {
   const [editingLoan, setEditingLoan] = useState<PersonalLoan | null>(null);
   const [showPayment, setShowPayment] = useState<string | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
+  const [creatingAR, setCreatingAR] = useState(false);
+  const [creatingLoan, setCreatingLoan] = useState(false);
+  const [processingPayment, setProcessingPayment] = useState(false);
 
   // AR form state
   const [newAR, setNewAR] = useState({
@@ -93,10 +96,8 @@ export default function CobrosPage() {
   const filteredLoans = loanFilter === "all" ? loans : loans.filter((l) => l.status === loanFilter);
 
   const handleCreateAR = async () => {
-    if (!newAR.concept.trim() || !newAR.amount || !newAR.companyId) {
-      console.log("AR validation failed:", { concept: newAR.concept, amount: newAR.amount, companyId: newAR.companyId });
-      return;
-    }
+    if (!newAR.concept.trim() || !newAR.amount || !newAR.companyId || creatingAR) return;
+    setCreatingAR(true);
     try {
       const selectedCompany = companies.find((c) => c.id === newAR.companyId);
       await createAR({
@@ -112,17 +113,24 @@ export default function CobrosPage() {
       setShowNewAR(false);
     } catch (err) {
       console.error("Error creating AR:", err);
+    } finally {
+      setCreatingAR(false);
     }
   };
 
   const handleCreateLoan = async () => {
-    if (!newLoan.borrower.trim() || !newLoan.concept.trim() || !newLoan.amount) return;
-    await createLoan({
-      ...newLoan,
-      dueDate: newLoan.dueDate || undefined,
-    });
-    setNewLoan({ borrower: "", phone: "", concept: "", amount: "", currency: "COP", loanDate: new Date().toISOString().split("T")[0], dueDate: "", notes: "" });
-    setShowNewLoan(false);
+    if (!newLoan.borrower.trim() || !newLoan.concept.trim() || !newLoan.amount || creatingLoan) return;
+    setCreatingLoan(true);
+    try {
+      await createLoan({
+        ...newLoan,
+        dueDate: newLoan.dueDate || undefined,
+      });
+      setNewLoan({ borrower: "", phone: "", concept: "", amount: "", currency: "COP", loanDate: new Date().toISOString().split("T")[0], dueDate: "", notes: "" });
+      setShowNewLoan(false);
+    } finally {
+      setCreatingLoan(false);
+    }
   };
 
   const handleUpdateLoan = async () => {
@@ -144,12 +152,17 @@ export default function CobrosPage() {
 
   const handlePayment = async (loan: PersonalLoan) => {
     const amount = parseFloat(paymentAmount);
-    if (!amount || amount <= 0) return;
-    const newAmountPaid = loan.amountPaid + amount;
-    const newStatus = newAmountPaid >= loan.amount ? "paid" : "partial";
-    await updateLoan(loan.id, { amountPaid: newAmountPaid, status: newStatus });
-    setShowPayment(null);
-    setPaymentAmount("");
+    if (!amount || amount <= 0 || processingPayment) return;
+    setProcessingPayment(true);
+    try {
+      const newAmountPaid = loan.amountPaid + amount;
+      const newStatus = newAmountPaid >= loan.amount ? "paid" : "partial";
+      await updateLoan(loan.id, { amountPaid: newAmountPaid, status: newStatus });
+      setShowPayment(null);
+      setPaymentAmount("");
+    } finally {
+      setProcessingPayment(false);
+    }
   };
 
   const startEditLoan = (loan: PersonalLoan) => {
@@ -275,7 +288,7 @@ export default function CobrosPage() {
                     onChange={(e) => setNewAR({ ...newAR, companyId: e.target.value })}
                     className="w-full mt-1 rounded-lg border border-input bg-background px-3 py-2 text-sm"
                   >
-                    <option value="">Seleccionar empresa... ({companies.length} disponibles)</option>
+                    <option value="">Seleccionar empresa...</option>
                     {companies.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
@@ -314,7 +327,9 @@ export default function CobrosPage() {
                   <Input type="date" value={newAR.dueDate} onChange={(e) => setNewAR({ ...newAR, dueDate: e.target.value })} className="mt-1" />
                 </div>
               </div>
-              <Button size="sm" onClick={handleCreateAR} className="rounded-full">Crear cuenta</Button>
+              <Button size="sm" onClick={handleCreateAR} disabled={creatingAR} className="rounded-full">
+                {creatingAR ? "Creando..." : "Crear cuenta"}
+              </Button>
             </div>
           )}
 
@@ -476,8 +491,8 @@ export default function CobrosPage() {
                   <Textarea value={newLoan.notes} onChange={(e) => setNewLoan({ ...newLoan, notes: e.target.value })} placeholder="Detalles adicionales..." className="mt-1" rows={2} />
                 </div>
               </div>
-              <Button size="sm" onClick={editingLoan ? handleUpdateLoan : handleCreateLoan} className="rounded-full">
-                {editingLoan ? "Guardar cambios" : "Registrar prestamo"}
+              <Button size="sm" onClick={editingLoan ? handleUpdateLoan : handleCreateLoan} disabled={creatingLoan} className="rounded-full">
+                {creatingLoan ? "Guardando..." : editingLoan ? "Guardar cambios" : "Registrar prestamo"}
               </Button>
             </div>
           )}
@@ -550,8 +565,8 @@ export default function CobrosPage() {
                         onChange={(e) => setPaymentAmount(e.target.value.replace(/[^0-9]/g, ""))}
                         className="h-8 text-sm flex-1"
                       />
-                      <Button size="sm" className="h-8 rounded-full text-xs" onClick={() => handlePayment(loan)}>
-                        <CheckCircle2 className="h-3 w-3 mr-1" /> Abonar
+                      <Button size="sm" className="h-8 rounded-full text-xs" onClick={() => handlePayment(loan)} disabled={processingPayment}>
+                        <CheckCircle2 className="h-3 w-3 mr-1" /> {processingPayment ? "..." : "Abonar"}
                       </Button>
                       <button onClick={() => { setShowPayment(null); setPaymentAmount(""); }}>
                         <X className="h-4 w-4 text-muted-foreground" />
