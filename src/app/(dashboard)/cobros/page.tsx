@@ -275,7 +275,7 @@ export default function CobrosPage() {
                     onChange={(e) => setNewAR({ ...newAR, companyId: e.target.value })}
                     className="w-full mt-1 rounded-lg border border-input bg-background px-3 py-2 text-sm"
                   >
-                    <option value="">Seleccionar empresa...</option>
+                    <option value="">Seleccionar empresa... ({companies.length} disponibles)</option>
                     {companies.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
