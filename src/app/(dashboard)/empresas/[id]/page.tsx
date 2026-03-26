@@ -86,7 +86,7 @@ export default function EmpresaDetallePage() {
   const [taskToComplete, setTaskToComplete] = useState<Task | null>(null);
   const [dailySummary, setDailySummary] = useState(company?.sendDailySummary ?? false);
   const [newTask, setNewTask] = useState({ title: "", description: "", priority: "medium" as Task["priority"], recurrence: "none" as RecurrenceType, weekDay: 1, dueDate: new Date().toISOString().split("T")[0] });
-  const [newAR, setNewAR] = useState({ client: "", concept: "", amount: "", currency: "COP" as "COP" | "USD", dueDate: new Date().toISOString().split("T")[0] });
+  const [newAR, setNewAR] = useState({ concept: "", amount: "", currency: "COP" as "COP" | "USD", dueDate: new Date().toISOString().split("T")[0] });
 
   if (!company) {
     return (
@@ -125,15 +125,15 @@ export default function EmpresaDetallePage() {
   };
 
   const handleCreateAR = async () => {
-    if (!newAR.client.trim() || !newAR.amount) return;
+    if (!newAR.concept.trim() || !newAR.amount) return;
     await createAR({
-      client: newAR.client,
+      client: company?.name || "",
       concept: newAR.concept,
       amount: newAR.amount,
       currency: newAR.currency,
       dueDate: newAR.dueDate,
     });
-    setNewAR({ client: "", concept: "", amount: "", currency: "COP", dueDate: new Date().toISOString().split("T")[0] });
+    setNewAR({ concept: "", amount: "", currency: "COP", dueDate: new Date().toISOString().split("T")[0] });
     setShowNewAR(false);
   };
 
@@ -476,10 +476,6 @@ export default function EmpresaDetallePage() {
               {/* New AR form */}
               {showNewAR && (
                 <div className="rounded-2xl bg-card border border-primary/20 p-3.5 sm:p-5 space-y-3 sm:space-y-4 animate-in slide-in-from-top-2 duration-200">
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] sm:text-xs font-medium">Cliente</Label>
-                    <Input placeholder="Nombre del cliente" value={newAR.client} onChange={(e) => setNewAR({ ...newAR, client: e.target.value })} className="rounded-xl h-9 text-xs sm:text-sm" />
-                  </div>
                   <div className="space-y-1.5">
                     <Label className="text-[10px] sm:text-xs font-medium">Concepto</Label>
                     <Input placeholder="Ej: Servicios contables - Marzo" value={newAR.concept} onChange={(e) => setNewAR({ ...newAR, concept: e.target.value })} className="rounded-xl h-9 text-xs sm:text-sm" />
