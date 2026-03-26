@@ -64,6 +64,7 @@ export default function CobrosPage() {
   const [processingPayment, setProcessingPayment] = useState(false);
   const [arErrors, setArErrors] = useState<Record<string, boolean>>({});
   const [loanErrors, setLoanErrors] = useState<Record<string, boolean>>({});
+  const [editingAR, setEditingAR] = useState<AccountReceivable | null>(null);
 
   // AR form state
   const [newAR, setNewAR] = useState({
@@ -179,6 +180,36 @@ export default function CobrosPage() {
       setPaymentAmount("");
     } finally {
       setProcessingPayment(false);
+    }
+  };
+
+  const startEditAR = (ar: AccountReceivable) => {
+    setEditingAR(ar);
+    setNewAR({
+      companyId: ar.companyId,
+      concept: ar.concept,
+      amount: String(ar.amount),
+      currency: ar.currency,
+      dueDate: ar.dueDate?.split("T")[0] || "",
+    });
+    setShowNewAR(true);
+  };
+
+  const handleUpdateAR = async () => {
+    if (!editingAR || !newAR.concept.trim() || !newAR.amount) return;
+    setCreatingAR(true);
+    try {
+      await updateAR(editingAR.id, {
+        concept: newAR.concept,
+        amount: newAR.amount,
+        currency: newAR.currency,
+        dueDate: newAR.dueDate,
+      });
+      setEditingAR(null);
+      setNewAR({ companyId: "", concept: "", amount: "", currency: "COP", dueDate: new Date().toISOString().split("T")[0] });
+      setShowNewAR(false);
+    } finally {
+      setCreatingAR(false);
     }
   };
 
@@ -317,8 +348,8 @@ export default function CobrosPage() {
           {showNewAR && (
             <div className="rounded-xl border bg-card p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold">Nueva cuenta por cobrar</h3>
-                <button onClick={() => setShowNewAR(false)}><X className="h-4 w-4 text-muted-foreground" /></button>
+                <h3 className="text-sm font-semibold">{editingAR ? "Editar cuenta por cobrar" : "Nueva cuenta por cobrar"}</h3>
+                <button onClick={() => { setShowNewAR(false); setEditingAR(null); }}><X className="h-4 w-4 text-muted-foreground" /></button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="sm:col-span-2">
@@ -367,8 +398,8 @@ export default function CobrosPage() {
                   <Input type="date" value={newAR.dueDate} onChange={(e) => setNewAR({ ...newAR, dueDate: e.target.value })} className="mt-1" />
                 </div>
               </div>
-              <Button size="sm" onClick={handleCreateAR} disabled={creatingAR} className="rounded-full">
-                {creatingAR ? "Creando..." : "Crear cuenta"}
+              <Button size="sm" onClick={editingAR ? handleUpdateAR : handleCreateAR} disabled={creatingAR} className="rounded-full">
+                {creatingAR ? "Guardando..." : editingAR ? "Guardar cambios" : "Crear cuenta"}
               </Button>
             </div>
           )}
@@ -431,13 +462,16 @@ export default function CobrosPage() {
                     </div>
                   )}
 
-                  {/* Actions */}
-                  <div className="flex justify-end gap-3 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {/* Actions — always visible */}
+                  <div className="flex justify-end gap-3 mt-2">
                     {ar.status !== "paid" && (
                       <button onClick={() => { setShowARPayment(ar.id); setArPaymentAmount(""); }} className="text-xs text-emerald-500 hover:text-emerald-700 flex items-center gap-1">
                         <DollarSign className="h-3 w-3" /> Abonar
                       </button>
                     )}
+                    <button onClick={() => startEditAR(ar)} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
+                      <Pencil className="h-3 w-3" /> Editar
+                    </button>
                     <button onClick={() => deleteAR(ar.id)} className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1">
                       <Trash2 className="h-3 w-3" /> Eliminar
                     </button>
@@ -641,10 +675,10 @@ export default function CobrosPage() {
                     </div>
                   )}
 
-                  {/* Actions */}
-                  <div className="flex justify-end gap-3 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {/* Actions — always visible */}
+                  <div className="flex justify-end gap-3 mt-2">
                     {loan.status !== "paid" && (
-                      <button onClick={() => { setShowPayment(loan.id); setPaymentAmount(""); }} className="text-xs text-blue-500 hover:text-blue-700 flex items-center gap-1">
+                      <button onClick={() => { setShowPayment(loan.id); setPaymentAmount(""); }} className="text-xs text-emerald-500 hover:text-emerald-700 flex items-center gap-1">
                         <DollarSign className="h-3 w-3" /> Abonar
                       </button>
                     )}
