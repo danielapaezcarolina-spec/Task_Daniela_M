@@ -167,7 +167,8 @@ export default function CobrosPage() {
   };
 
   const handlePayment = async (loan: PersonalLoan) => {
-    const amount = parseFloat(paymentAmount);
+    const remaining = loan.amount - loan.amountPaid;
+    const amount = Math.min(parseFloat(paymentAmount) || 0, remaining);
     if (!amount || amount <= 0 || processingPayment) return;
     setProcessingPayment(true);
     try {
@@ -182,7 +183,8 @@ export default function CobrosPage() {
   };
 
   const handleARPayment = async (ar: AccountReceivable) => {
-    const amount = parseFloat(arPaymentAmount);
+    const remaining = ar.amount - ar.amountPaid;
+    const amount = Math.min(parseFloat(arPaymentAmount) || 0, remaining);
     if (!amount || amount <= 0 || processingPayment) return;
     setProcessingPayment(true);
     try {
