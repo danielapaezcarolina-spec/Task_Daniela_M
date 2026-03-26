@@ -277,8 +277,14 @@ export default function CobrosPage() {
                 <div className="flex gap-2">
                   <div className="flex-1">
                     <Label className="text-xs">Monto</Label>
-                    <Input type="number" value={newAR.amount} onChange={(e) => setNewAR({ ...newAR, amount: e.target.value })} placeholder="100000" className="mt-1" />
-                    {newAR.amount && <p className="text-[10px] text-muted-foreground mt-0.5">{formatCOP(parseFloat(newAR.amount) || 0)}</p>}
+                    <Input
+                      type="text"
+                      inputMode="numeric"
+                      value={newAR.amount ? formatCOP(parseFloat(newAR.amount) || 0) : ""}
+                      onChange={(e) => setNewAR({ ...newAR, amount: e.target.value.replace(/[^0-9]/g, "") })}
+                      placeholder="$0"
+                      className="mt-1"
+                    />
                   </div>
                   <div className="w-20">
                     <Label className="text-xs">Moneda</Label>
@@ -425,8 +431,14 @@ export default function CobrosPage() {
                 <div className="flex gap-2">
                   <div className="flex-1">
                     <Label className="text-xs">Monto</Label>
-                    <Input type="number" value={newLoan.amount} onChange={(e) => setNewLoan({ ...newLoan, amount: e.target.value })} placeholder="100000" className="mt-1" />
-                    {newLoan.amount && <p className="text-[10px] text-muted-foreground mt-0.5">{formatCOP(parseFloat(newLoan.amount) || 0)}</p>}
+                    <Input
+                      type="text"
+                      inputMode="numeric"
+                      value={newLoan.amount ? formatCOP(parseFloat(newLoan.amount) || 0) : ""}
+                      onChange={(e) => setNewLoan({ ...newLoan, amount: e.target.value.replace(/[^0-9]/g, "") })}
+                      placeholder="$0"
+                      className="mt-1"
+                    />
                   </div>
                   <div className="w-24">
                     <Label className="text-xs">Moneda</Label>
@@ -520,10 +532,11 @@ export default function CobrosPage() {
                   {showPayment === loan.id && (
                     <div className="mt-3 flex items-center gap-2 p-2 rounded-lg bg-muted/50">
                       <Input
-                        type="number"
-                        placeholder="Monto del abono"
-                        value={paymentAmount}
-                        onChange={(e) => setPaymentAmount(e.target.value)}
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="$0"
+                        value={paymentAmount ? formatCOP(parseFloat(paymentAmount) || 0) : ""}
+                        onChange={(e) => setPaymentAmount(e.target.value.replace(/[^0-9]/g, ""))}
                         className="h-8 text-sm flex-1"
                       />
                       <Button size="sm" className="h-8 rounded-full text-xs" onClick={() => handlePayment(loan)}>
