@@ -213,9 +213,10 @@ export default function CobrosPage() {
     setShowNewLoan(true);
   };
 
-  // Limit money input to max 999,999,999
-  const cleanMoney = (val: string) => {
+  // Clean money input: only digits, max 9 digits
+  const cleanMoney = (val: string, max?: number) => {
     const digits = val.replace(/[^0-9]/g, "").slice(0, 9);
+    if (max != null && parseInt(digits || "0") > max) return String(Math.round(max));
     return digits;
   };
 
@@ -418,7 +419,7 @@ export default function CobrosPage() {
                         inputMode="numeric"
                         placeholder="$0"
                         value={arPaymentAmount ? formatCOP(parseFloat(arPaymentAmount) || 0) : ""}
-                        onChange={(e) => setArPaymentAmount(cleanMoney(e.target.value))}
+                        onChange={(e) => setArPaymentAmount(cleanMoney(e.target.value, ar.amount - ar.amountPaid))}
                         className="h-8 text-sm flex-1"
                       />
                       <Button size="sm" className="h-8 rounded-full text-xs" onClick={() => handleARPayment(ar)} disabled={processingPayment}>
@@ -628,7 +629,7 @@ export default function CobrosPage() {
                         inputMode="numeric"
                         placeholder="$0"
                         value={paymentAmount ? formatCOP(parseFloat(paymentAmount) || 0) : ""}
-                        onChange={(e) => setPaymentAmount(cleanMoney(e.target.value))}
+                        onChange={(e) => setPaymentAmount(cleanMoney(e.target.value, loan.amount - loan.amountPaid))}
                         className="h-8 text-sm flex-1"
                       />
                       <Button size="sm" className="h-8 rounded-full text-xs" onClick={() => handlePayment(loan)} disabled={processingPayment}>
