@@ -11,7 +11,7 @@ interface TaskContextType {
   updateTaskStatus: (id: string, status: Task["status"], observation?: string) => void;
   addObservation: (id: string, text: string) => void;
   updateTask: (id: string, updates: Partial<Pick<Task, "title" | "description" | "priority" | "dueDate" | "recurrence">>) => void;
-  createTask: (data: { title: string; description?: string; priority?: string; recurrence?: string; dueDate: string; companyId?: string }) => Promise<void>;
+  createTask: (data: { title: string; description?: string; priority?: string; recurrence?: string; weekDay?: number; dueDate: string; companyId?: string }) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
   refreshTasks: () => Promise<void>;
 }
@@ -86,7 +86,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     await tasksApi.update(id, { ...updates, observation: "Tarea editada" }).catch(() => refreshTasks());
   }, [refreshTasks]);
 
-  const createTask = useCallback(async (data: { title: string; description?: string; priority?: string; recurrence?: string; dueDate: string; companyId?: string }) => {
+  const createTask = useCallback(async (data: { title: string; description?: string; priority?: string; recurrence?: string; weekDay?: number; dueDate: string; companyId?: string }) => {
     const task = await tasksApi.create({ ...data, companyId: data.companyId || "" });
     setTasks((prev) => [...prev, task]);
   }, []);

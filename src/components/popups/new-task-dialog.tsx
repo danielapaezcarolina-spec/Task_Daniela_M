@@ -13,7 +13,7 @@ import type { Company } from "@/lib/types";
 interface NewTaskDialogProps {
   open: boolean;
   onClose: () => void;
-  onCreateTask: (data: { title: string; description?: string; priority: string; recurrence: string; dueDate: string; companyId?: string }) => Promise<void>;
+  onCreateTask: (data: { title: string; description?: string; priority: string; recurrence: string; weekDay?: number; dueDate: string; companyId?: string }) => Promise<void>;
   companies?: Company[];
   defaultCompanyId?: string;
 }
@@ -30,6 +30,7 @@ export function NewTaskDialog({ open, onClose, onCreateTask, companies = [], def
     description: "",
     priority: "medium" as "high" | "medium" | "low",
     recurrence: "none",
+    weekDay: 1,
     dueDate: new Date().toISOString().split("T")[0],
     companyId: defaultCompanyId ?? "",
   });
@@ -45,10 +46,11 @@ export function NewTaskDialog({ open, onClose, onCreateTask, companies = [], def
         description: form.description || undefined,
         priority: form.priority,
         recurrence: form.recurrence,
+        weekDay: form.recurrence === "weekly_specific" ? form.weekDay : undefined,
         dueDate: form.dueDate,
         companyId: form.companyId || undefined,
       });
-      setForm({ title: "", description: "", priority: "medium", recurrence: "none", dueDate: new Date().toISOString().split("T")[0], companyId: defaultCompanyId ?? "" });
+      setForm({ title: "", description: "", priority: "medium", recurrence: "none", weekDay: 1, dueDate: new Date().toISOString().split("T")[0], companyId: defaultCompanyId ?? "" });
       onClose();
     } finally {
       setLoading(false);
@@ -130,7 +132,8 @@ export function NewTaskDialog({ open, onClose, onCreateTask, companies = [], def
                 >
                   <option value="none">Una vez</option>
                   <option value="daily">Diaria</option>
-                  <option value="weekly">Semanal</option>
+                  <option value="weekly">Semanal (L-V)</option>
+                  <option value="weekly_specific">Semanal - Día específico</option>
                   <option value="monthly">Mensual</option>
                 </select>
                 <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
@@ -146,6 +149,33 @@ export function NewTaskDialog({ open, onClose, onCreateTask, companies = [], def
               />
             </div>
           </div>
+
+          {form.recurrence === "weekly_specific" && (
+            <div className="space-y-1">
+              <Label className="text-xs">Día de la semana</Label>
+              <div className="flex gap-1">
+                {([
+                  { value: 1, label: "Lun" },
+                  { value: 2, label: "Mar" },
+                  { value: 3, label: "Mié" },
+                  { value: 4, label: "Jue" },
+                  { value: 5, label: "Vie" },
+                ] as const).map((d) => (
+                  <button
+                    key={d.value}
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, weekDay: d.value }))}
+                    className={cn(
+                      "flex-1 text-[11px] font-medium py-1.5 rounded-lg transition-all",
+                      form.weekDay === d.value ? "bg-violet-100 text-violet-700 ring-1 ring-violet-300" : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    {d.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="flex gap-2 pt-1">
             <Button type="button" variant="outline" className="flex-1 rounded-xl h-9 text-sm" onClick={onClose}>

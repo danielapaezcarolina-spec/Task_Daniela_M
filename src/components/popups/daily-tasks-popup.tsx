@@ -58,7 +58,24 @@ export function DailyTasksPopup({ open, onClose }: DailyTasksPopupProps) {
 
   const today = new Date();
   const todayStr = today.toISOString().split("T")[0];
-  const todayTasks = tasks.filter((t) => t.dueDate === todayStr && t.status !== "done");
+  const isWeekday = today.getDay() >= 1 && today.getDay() <= 5;
+
+  const todayTasks = tasks.filter((t) => {
+    if (t.status === "done") return false;
+    const taskDate = t.dueDate?.split("T")[0];
+
+    // Weekly tasks: show Mon-Fri
+    if (t.recurrence === "weekly") return isWeekday;
+
+    // Weekly specific: show only on the chosen day
+    if (t.recurrence === "weekly_specific") return t.weekDay === today.getDay();
+
+    // Daily tasks: show Mon-Fri
+    if (t.recurrence === "daily") return isWeekday;
+
+    // All other tasks: show on exact due date
+    return taskDate === todayStr;
+  });
   const urgentCount = todayTasks.filter((t) => t.priority === "high").length;
 
   const dayFormatted = today.toLocaleDateString("es", {

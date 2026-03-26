@@ -46,7 +46,8 @@ model Task {
   description String?
   priority    String   @default("medium") // high, medium, low
   status      String   @default("todo")   // todo, in_progress, done
-  recurrence  String   @default("none")   // none, daily, weekly, monthly
+  recurrence  String   @default("none")   // none, daily, weekly, weekly_specific, monthly
+  weekDay     Int?                            // 0=Dom,1=Lun,2=Mar,3=Mie,4=Jue,5=Vie,6=Sab (solo para weekly_specific)
   dueDate     DateTime
   createdAt   DateTime @default(now())
   completedAt DateTime?

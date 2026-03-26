@@ -30,7 +30,8 @@ export interface Task {
   companyName?: string;
   priority: "high" | "medium" | "low";
   status: "todo" | "in_progress" | "done";
-  recurrence: "none" | "daily" | "weekly" | "monthly";
+  recurrence: "none" | "daily" | "weekly" | "weekly_specific" | "monthly";
+  weekDay?: number | null; // 0=Dom,1=Lun,2=Mar,3=Mie,4=Jue,5=Vie,6=Sab
   dueDate: string;
   createdAt: string;
   completedAt?: string;

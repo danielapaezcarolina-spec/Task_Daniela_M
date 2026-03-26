@@ -29,6 +29,7 @@ function mapTask(t: Record<string, unknown>): Task {
     dueDate: typeof t.dueDate === "string" ? t.dueDate.split("T")[0] : "",
     createdAt: typeof t.createdAt === "string" ? t.createdAt.split("T")[0] : "",
     completedAt: t.completedAt ? (t.completedAt as string).split("T")[0] : undefined,
+    weekDay: t.weekDay as number | null | undefined,
   } as Task;
 }
 

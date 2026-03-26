@@ -31,6 +31,7 @@ export async function POST(req: Request) {
       priority: body.priority || "medium",
       status: body.status || "todo",
       recurrence: body.recurrence || "none",
+      weekDay: body.recurrence === "weekly_specific" && body.weekDay != null ? parseInt(body.weekDay) : null,
       dueDate: new Date(body.dueDate),
       ...(body.companyId ? { companyId: body.companyId } : {}),
       userId: session.userId,

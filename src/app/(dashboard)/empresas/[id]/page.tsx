@@ -42,10 +42,11 @@ import { cn, formatCOP } from "@/lib/utils";
 type MainTab = "tareas" | "cuentas";
 type FilterStatus = "all" | "todo" | "in_progress" | "done";
 type ARFilter = "all" | "pending" | "partial" | "paid" | "overdue";
-type RecurrenceType = "none" | "daily" | "weekly" | "monthly";
+type RecurrenceType = "none" | "daily" | "weekly" | "weekly_specific" | "monthly";
 
-const recurrenceLabels: Record<RecurrenceType, string> = { none: "Una vez", daily: "Diaria", weekly: "Semanal", monthly: "Mensual" };
-const recurrenceColors: Record<RecurrenceType, string> = { none: "bg-gray-100 text-gray-600", daily: "bg-violet-50 text-violet-600", weekly: "bg-violet-50 text-violet-600", monthly: "bg-violet-50 text-violet-600" };
+const recurrenceLabels: Record<RecurrenceType, string> = { none: "Una vez", daily: "Diaria", weekly: "Semanal (L-V)", weekly_specific: "Semanal - Día", monthly: "Mensual" };
+const recurrenceColors: Record<RecurrenceType, string> = { none: "bg-gray-100 text-gray-600", daily: "bg-violet-50 text-violet-600", weekly: "bg-violet-50 text-violet-600", weekly_specific: "bg-violet-50 text-violet-600", monthly: "bg-violet-50 text-violet-600" };
+const weekDayLabels: Record<number, string> = { 1: "Lun", 2: "Mar", 3: "Mié", 4: "Jue", 5: "Vie" };
 const priorityConfig = {
   high: { label: "Alta", color: "bg-violet-100 text-violet-700", dot: "bg-violet-500" },
   medium: { label: "Media", color: "bg-violet-50 text-violet-600", dot: "bg-violet-400" },
@@ -84,7 +85,7 @@ export default function EmpresaDetallePage() {
   const [showNewAR, setShowNewAR] = useState(false);
   const [taskToComplete, setTaskToComplete] = useState<Task | null>(null);
   const [dailySummary, setDailySummary] = useState(company?.sendDailySummary ?? false);
-  const [newTask, setNewTask] = useState({ title: "", description: "", priority: "medium" as Task["priority"], recurrence: "none" as RecurrenceType, dueDate: new Date().toISOString().split("T")[0] });
+  const [newTask, setNewTask] = useState({ title: "", description: "", priority: "medium" as Task["priority"], recurrence: "none" as RecurrenceType, weekDay: 1, dueDate: new Date().toISOString().split("T")[0] });
   const [newAR, setNewAR] = useState({ client: "", concept: "", amount: "", currency: "COP" as "COP" | "USD", dueDate: new Date().toISOString().split("T")[0] });
 
   if (!company) {
@@ -115,10 +116,11 @@ export default function EmpresaDetallePage() {
       description: newTask.description,
       priority: newTask.priority,
       recurrence: newTask.recurrence,
+      weekDay: newTask.recurrence === "weekly_specific" ? newTask.weekDay : undefined,
       dueDate: newTask.dueDate,
       companyId,
     });
-    setNewTask({ title: "", description: "", priority: "medium", recurrence: "none", dueDate: new Date().toISOString().split("T")[0] });
+    setNewTask({ title: "", description: "", priority: "medium", recurrence: "none", weekDay: 1, dueDate: new Date().toISOString().split("T")[0] });
     setShowNewTask(false);
   };
 
@@ -353,12 +355,25 @@ export default function EmpresaDetallePage() {
                         <select value={newTask.recurrence} onChange={(e) => setNewTask({ ...newTask, recurrence: e.target.value as RecurrenceType })} className="w-full appearance-none rounded-xl border border-border bg-card px-3 py-1.5 text-xs sm:text-sm pr-8 h-9">
                           <option value="none">Una vez</option>
                           <option value="daily">Diaria</option>
-                          <option value="weekly">Semanal</option>
+                          <option value="weekly">Semanal (L-V)</option>
+                          <option value="weekly_specific">Semanal - Día</option>
                           <option value="monthly">Mensual</option>
                         </select>
                         <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
                       </div>
                     </div>
+                    {newTask.recurrence === "weekly_specific" && (
+                      <div className="space-y-1.5">
+                        <Label className="text-[10px] sm:text-xs font-medium">Día de la semana</Label>
+                        <div className="flex gap-1">
+                          {([{ value: 1, label: "Lun" }, { value: 2, label: "Mar" }, { value: 3, label: "Mié" }, { value: 4, label: "Jue" }, { value: 5, label: "Vie" }] as const).map((d) => (
+                            <button key={d.value} type="button" onClick={() => setNewTask({ ...newTask, weekDay: d.value })} className={cn("flex-1 text-[10px] sm:text-[11px] font-medium py-1.5 rounded-lg transition-all", newTask.weekDay === d.value ? "bg-violet-100 text-violet-700 ring-1 ring-violet-300" : "bg-muted text-muted-foreground")}>
+                              {d.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     <div className="space-y-1.5">
                       <Label className="text-[10px] sm:text-xs font-medium">{newTask.recurrence === "none" ? "Fecha límite" : "Próxima fecha"}</Label>
                       <Input type="date" value={newTask.dueDate} onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })} className="rounded-xl h-9 text-xs sm:text-sm" />
@@ -406,7 +421,7 @@ export default function EmpresaDetallePage() {
                           <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                             {task.recurrence !== "none" && (
                               <span className={cn("text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full flex items-center gap-0.5", recurrenceColors[task.recurrence])}>
-                                <Repeat className="h-2 w-2 sm:h-2.5 sm:w-2.5" />{recurrenceLabels[task.recurrence]}
+                                <Repeat className="h-2 w-2 sm:h-2.5 sm:w-2.5" />{recurrenceLabels[task.recurrence]}{task.recurrence === "weekly_specific" && task.weekDay != null ? ` (${weekDayLabels[task.weekDay] || ""})` : ""}
                               </span>
                             )}
                             <span className={cn("text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full", priorityConfig[task.priority].color)}>{priorityConfig[task.priority].label}</span>

@@ -272,7 +272,7 @@ export default function CalendarioPage() {
                             {task.recurrence !== "none" && (
                               <span className="text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-violet-50 text-violet-500 flex items-center gap-0.5">
                                 <Repeat className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
-                                {task.recurrence === "daily" ? "Diaria" : task.recurrence === "weekly" ? "Semanal" : "Mensual"}
+                                {task.recurrence === "daily" ? "Diaria" : task.recurrence === "weekly" ? "Semanal (L-V)" : task.recurrence === "weekly_specific" ? `Semanal (${({1:"Lun",2:"Mar",3:"Mié",4:"Jue",5:"Vie"} as Record<number,string>)[task.weekDay ?? 0] || ""})` : "Mensual"}
                               </span>
                             )}
                           </div>
