@@ -32,10 +32,9 @@ export function useAccountsReceivable(companyId?: string) {
   }, [companyId, refresh]);
 
   const updateAR = useCallback(async (id: string, data: Record<string, unknown>) => {
-    const ar = await arApi.update(id, data);
-    setAccounts((prev) => prev.map((a) => (a.id === id ? ar : a)));
-    return ar;
-  }, []);
+    await arApi.update(id, data);
+    await refresh();
+  }, [refresh]);
 
   const deleteAR = useCallback(async (id: string) => {
     await arApi.delete(id);

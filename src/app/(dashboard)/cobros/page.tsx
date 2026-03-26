@@ -45,7 +45,7 @@ const loanStatusConfig = {
 };
 
 export default function CobrosPage() {
-  const { accounts, createAR, deleteAR } = useAccountsReceivable();
+  const { accounts, createAR, updateAR, deleteAR } = useAccountsReceivable();
   const { loans, createLoan, updateLoan, deleteLoan } = useLoans();
   const { companies } = useCompanies();
 
@@ -56,7 +56,9 @@ export default function CobrosPage() {
   const [showNewLoan, setShowNewLoan] = useState(false);
   const [editingLoan, setEditingLoan] = useState<PersonalLoan | null>(null);
   const [showPayment, setShowPayment] = useState<string | null>(null);
+  const [showARPayment, setShowARPayment] = useState<string | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
+  const [arPaymentAmount, setArPaymentAmount] = useState("");
   const [creatingAR, setCreatingAR] = useState(false);
   const [creatingLoan, setCreatingLoan] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
@@ -174,6 +176,21 @@ export default function CobrosPage() {
       await updateLoan(loan.id, { amountPaid: newAmountPaid, status: newStatus });
       setShowPayment(null);
       setPaymentAmount("");
+    } finally {
+      setProcessingPayment(false);
+    }
+  };
+
+  const handleARPayment = async (ar: AccountReceivable) => {
+    const amount = parseFloat(arPaymentAmount);
+    if (!amount || amount <= 0 || processingPayment) return;
+    setProcessingPayment(true);
+    try {
+      const newAmountPaid = ar.amountPaid + amount;
+      const newStatus = newAmountPaid >= ar.amount ? "paid" : "partial";
+      await updateAR(ar.id, { amountPaid: newAmountPaid, status: newStatus });
+      setShowARPayment(null);
+      setArPaymentAmount("");
     } finally {
       setProcessingPayment(false);
     }
@@ -376,15 +393,42 @@ export default function CobrosPage() {
                       </p>
                     </div>
                   </div>
-                  {ar.status === "partial" && (
+                  {(ar.status === "partial" || ar.amountPaid > 0) && (
                     <div className="mt-2">
                       <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                        <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${(ar.amountPaid / ar.amount) * 100}%` }} />
+                        <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${(ar.amountPaid / ar.amount) * 100}%` }} />
                       </div>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">{Math.round((ar.amountPaid / ar.amount) * 100)}% pagado</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">{Math.round((ar.amountPaid / ar.amount) * 100)}% pagado — Resta: {fmtMoney(ar.amount - ar.amountPaid)}</p>
                     </div>
                   )}
-                  <div className="flex justify-end mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+
+                  {/* Payment inline form */}
+                  {showARPayment === ar.id && (
+                    <div className="mt-3 flex items-center gap-2 p-2 rounded-lg bg-muted/50">
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="$0"
+                        value={arPaymentAmount ? formatCOP(parseFloat(arPaymentAmount) || 0) : ""}
+                        onChange={(e) => setArPaymentAmount(e.target.value.replace(/[^0-9]/g, ""))}
+                        className="h-8 text-sm flex-1"
+                      />
+                      <Button size="sm" className="h-8 rounded-full text-xs" onClick={() => handleARPayment(ar)} disabled={processingPayment}>
+                        <CheckCircle2 className="h-3 w-3 mr-1" /> {processingPayment ? "..." : "Abonar"}
+                      </Button>
+                      <button onClick={() => { setShowARPayment(null); setArPaymentAmount(""); }}>
+                        <X className="h-4 w-4 text-muted-foreground" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex justify-end gap-3 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {ar.status !== "paid" && (
+                      <button onClick={() => { setShowARPayment(ar.id); setArPaymentAmount(""); }} className="text-xs text-emerald-500 hover:text-emerald-700 flex items-center gap-1">
+                        <DollarSign className="h-3 w-3" /> Abonar
+                      </button>
+                    )}
                     <button onClick={() => deleteAR(ar.id)} className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1">
                       <Trash2 className="h-3 w-3" /> Eliminar
                     </button>
