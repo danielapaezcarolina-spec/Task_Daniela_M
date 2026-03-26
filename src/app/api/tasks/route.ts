@@ -9,6 +9,23 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const companyId = url.searchParams.get("companyId");
 
+  // Auto-reset: recurring tasks completed before today go back to "todo"
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  await prisma.task.updateMany({
+    where: {
+      status: "done",
+      recurrence: { in: ["daily", "weekly", "weekly_specific", "monthly"] },
+      completedAt: { lt: todayStart },
+    },
+    data: {
+      status: "todo",
+      completedAt: null,
+      completionComment: null,
+    },
+  });
+
   const tasks = await prisma.task.findMany({
     where: companyId ? { companyId } : undefined,
     include: { observations: { orderBy: { date: "desc" } }, company: true },
