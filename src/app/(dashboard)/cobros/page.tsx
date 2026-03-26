@@ -213,6 +213,12 @@ export default function CobrosPage() {
     setShowNewLoan(true);
   };
 
+  // Limit money input to max 999,999,999
+  const cleanMoney = (val: string) => {
+    const digits = val.replace(/[^0-9]/g, "").slice(0, 9);
+    return digits;
+  };
+
   const formatDate = (d?: string) => {
     if (!d) return "Sin fecha";
     return new Date(d).toLocaleDateString("es", { day: "numeric", month: "short", year: "numeric" });
@@ -338,7 +344,7 @@ export default function CobrosPage() {
                       type="text"
                       inputMode="numeric"
                       value={newAR.amount ? formatCOP(parseFloat(newAR.amount) || 0) : ""}
-                      onChange={(e) => { setNewAR({ ...newAR, amount: e.target.value.replace(/[^0-9]/g, "") }); setArErrors((prev) => ({ ...prev, amount: false })); }}
+                      onChange={(e) => { setNewAR({ ...newAR, amount: cleanMoney(e.target.value) }); setArErrors((prev) => ({ ...prev, amount: false })); }}
                       placeholder="$0"
                       className={cn("mt-1", arErrors.amount && "border-red-500")}
                     />
@@ -412,7 +418,7 @@ export default function CobrosPage() {
                         inputMode="numeric"
                         placeholder="$0"
                         value={arPaymentAmount ? formatCOP(parseFloat(arPaymentAmount) || 0) : ""}
-                        onChange={(e) => setArPaymentAmount(e.target.value.replace(/[^0-9]/g, ""))}
+                        onChange={(e) => setArPaymentAmount(cleanMoney(e.target.value))}
                         className="h-8 text-sm flex-1"
                       />
                       <Button size="sm" className="h-8 rounded-full text-xs" onClick={() => handleARPayment(ar)} disabled={processingPayment}>
@@ -521,7 +527,7 @@ export default function CobrosPage() {
                       type="text"
                       inputMode="numeric"
                       value={newLoan.amount ? formatCOP(parseFloat(newLoan.amount) || 0) : ""}
-                      onChange={(e) => { setNewLoan({ ...newLoan, amount: e.target.value.replace(/[^0-9]/g, "") }); setLoanErrors((prev) => ({ ...prev, amount: false })); }}
+                      onChange={(e) => { setNewLoan({ ...newLoan, amount: cleanMoney(e.target.value) }); setLoanErrors((prev) => ({ ...prev, amount: false })); }}
                       placeholder="$0"
                       className={cn("mt-1", loanErrors.amount && "border-red-500")}
                     />
@@ -622,7 +628,7 @@ export default function CobrosPage() {
                         inputMode="numeric"
                         placeholder="$0"
                         value={paymentAmount ? formatCOP(parseFloat(paymentAmount) || 0) : ""}
-                        onChange={(e) => setPaymentAmount(e.target.value.replace(/[^0-9]/g, ""))}
+                        onChange={(e) => setPaymentAmount(cleanMoney(e.target.value))}
                         className="h-8 text-sm flex-1"
                       />
                       <Button size="sm" className="h-8 rounded-full text-xs" onClick={() => handlePayment(loan)} disabled={processingPayment}>
