@@ -24,8 +24,9 @@ export function RecentTasks({ stretch }: { stretch?: boolean }) {
   const { tasks, updateTaskStatus, addObservation, updateTask } = useTasks();
   const [taskToComplete, setTaskToComplete] = useState<Task | null>(null);
 
+  const today = new Date().toISOString().split("T")[0];
   const recentTasks = tasks
-    .filter((t) => t.status !== "done")
+    .filter((t) => t.status !== "done" && t.dueDate && t.dueDate.split("T")[0] === today)
     .slice(0, 4);
 
   const handleChangeStatus = (taskId: string, status: Task["status"], obs?: string) => {
