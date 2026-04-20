@@ -147,31 +147,31 @@ export default function EmpresaDetallePage() {
     setSendingResumen(true);
     setResumenResult(null);
 
-    const pending = companyTasks.filter((t) => t.status === "todo");
     const inProg = companyTasks.filter((t) => t.status === "in_progress");
     const done = companyTasks.filter((t) => t.status === "done");
+    const todayDate = new Date().toLocaleDateString("es", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
     const formatTask = (t: typeof companyTasks[0]) => {
       const lastObs = t.observations && t.observations.length > 0
         ? `\n   📝 ${t.observations[t.observations.length - 1].text}`
         : "";
-      const due = new Date(t.dueDate).toLocaleDateString("es", { day: "2-digit", month: "short" });
       const prio = t.priority === "high" ? "🔴" : t.priority === "medium" ? "🟡" : "🟢";
-      return `${prio} ${t.title} (vence ${due})${lastObs}`;
+      return `${prio} ${t.title}${lastObs}`;
     };
 
     let msg = `📊 *Resumen de ${company.name}*\n`;
+    msg += `📅 ${todayDate}\n`;
     msg += `━━━━━━━━━━━━━━━━━━\n`;
     if (inProg.length > 0) {
       msg += `\n🔄 *En progreso (${inProg.length})*\n${inProg.map(formatTask).join("\n")}\n`;
     }
-    if (pending.length > 0) {
-      msg += `\n⏳ *Pendientes (${pending.length})*\n${pending.map(formatTask).join("\n")}\n`;
-    }
     if (done.length > 0) {
       msg += `\n✅ *Completadas (${done.length})*\n${done.map((t) => `• ${t.title}`).join("\n")}\n`;
     }
-    msg += `\n━━━━━━━━━━━━━━━━━━\nTotal: ${companyTasks.length} tareas`;
+    if (inProg.length === 0 && done.length === 0) {
+      msg += `\nNo hay novedades para hoy.\n`;
+    }
+    msg += `\n━━━━━━━━━━━━━━━━━━`;
 
     try {
       const sent = await sendWAMessage(company.phone, msg);
@@ -253,7 +253,10 @@ export default function EmpresaDetallePage() {
                   <p className="text-xs font-medium">Resumen diario</p>
                   <p className="text-[10px] text-muted-foreground leading-none">Al final del día</p>
                 </div>
-                <Switch checked={dailySummary} onCheckedChange={setDailySummary} />
+                <Switch checked={dailySummary} onCheckedChange={(checked) => {
+                  setDailySummary(checked);
+                  updateCompany(companyId, { sendDailySummary: checked });
+                }} />
               </div>
               <div className="space-y-1">
                 <Button
