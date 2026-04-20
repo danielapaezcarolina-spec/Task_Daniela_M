@@ -99,7 +99,11 @@ export default function EmpresaDetallePage() {
     );
   }
 
-  const filtered = filter === "all" ? companyTasks : companyTasks.filter((t) => t.status === filter);
+  const today = new Date().toISOString().split("T")[0];
+  const todayTasks = companyTasks.filter((t) => t.dueDate && t.dueDate.split("T")[0] === today);
+  const displayTasks = filter === "all" ? todayTasks : filter === "today" ? todayTasks : companyTasks.filter((t) => filter === "done" ? t.status === "done" : t.status === filter);
+  const pendingToday = todayTasks.filter((t) => t.status !== "done");
+  const doneToday = todayTasks.filter((t) => t.status === "done");
   const todoCount = companyTasks.filter((t) => t.status === "todo").length;
   const progressCount = companyTasks.filter((t) => t.status === "in_progress").length;
   const doneCount = companyTasks.filter((t) => t.status === "done").length;
@@ -275,16 +279,16 @@ export default function EmpresaDetallePage() {
             {/* Right: Stats */}
             <div className="grid grid-cols-3 sm:w-[280px] lg:w-[320px] shrink-0 border-t sm:border-t-0 border-border/50">
               <div className="flex flex-col items-center justify-center p-3 sm:p-4">
-                <p className="text-xl sm:text-2xl font-bold text-foreground">{todoCount}</p>
-                <p className="text-[9px] sm:text-[11px] text-muted-foreground">Pendientes</p>
+                <p className="text-xl sm:text-2xl font-bold text-foreground">{pendingToday.length}</p>
+                <p className="text-[9px] sm:text-[11px] text-muted-foreground">Hoy pendientes</p>
               </div>
               <div className="flex flex-col items-center justify-center p-3 sm:p-4 border-x border-border/50">
-                <p className="text-xl sm:text-2xl font-bold text-violet-500">{progressCount}</p>
-                <p className="text-[9px] sm:text-[11px] text-muted-foreground">En progreso</p>
+                <p className="text-xl sm:text-2xl font-bold text-violet-500">{todayTasks.length}</p>
+                <p className="text-[9px] sm:text-[11px] text-muted-foreground">Hoy total</p>
               </div>
               <div className="flex flex-col items-center justify-center p-3 sm:p-4">
-                <p className="text-xl sm:text-2xl font-bold text-emerald-500">{doneCount}</p>
-                <p className="text-[9px] sm:text-[11px] text-muted-foreground">Completadas</p>
+                <p className="text-xl sm:text-2xl font-bold text-emerald-500">{doneToday.length}</p>
+                <p className="text-[9px] sm:text-[11px] text-muted-foreground">Realizadas</p>
               </div>
             </div>
           </div>
@@ -388,10 +392,10 @@ export default function EmpresaDetallePage() {
               {/* Filters */}
               <div className="flex gap-1.5 overflow-x-auto pb-1">
                 {([
-                  { value: "all", label: "Todas", count: companyTasks.length },
+                  { value: "all", label: "Hoy", count: todayTasks.length },
                   { value: "todo", label: "Pendientes", count: todoCount },
                   { value: "in_progress", label: "En curso", count: progressCount },
-                  { value: "done", label: "Listas", count: doneCount },
+                  { value: "done", label: "Todas completadas", count: doneCount },
                 ] as const).map((tab) => (
                   <button key={tab.value} onClick={() => setFilter(tab.value)} className={cn("flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-full text-[10px] sm:text-xs font-medium transition-all whitespace-nowrap shrink-0", filter === tab.value ? "bg-foreground text-card" : "bg-muted text-muted-foreground")}>
                     {tab.label}
@@ -400,47 +404,129 @@ export default function EmpresaDetallePage() {
                 ))}
               </div>
 
-              {/* Tasks list */}
-              <div className="space-y-2">
-                {filtered.length === 0 && (
-                  <div className="rounded-2xl bg-card border border-border/50 p-6 sm:p-8 text-center">
-                    <p className="text-xs sm:text-sm text-muted-foreground">No hay tareas en esta categoría</p>
-                  </div>
-                )}
-                {filtered.map((task) => {
-                  const StatusIcon = statusConfig[task.status].icon;
-                  return (
-                    <div key={task.id} onClick={() => setTaskToComplete(task)} className={cn("group rounded-2xl bg-card border border-border/50 p-3 sm:p-4 hover:shadow-md transition-all duration-200 cursor-pointer", task.status === "done" && "opacity-60")}>
-                      <div className="flex items-start gap-2.5 sm:gap-3">
-                        <div className={cn("mt-0.5 shrink-0", statusConfig[task.status].color)}>
-                          <StatusIcon className={cn("h-4 w-4 sm:h-5 sm:w-5", task.status === "in_progress" && "animate-spin")} />
+              {/* Today view: two columns */}
+              {filter === "all" ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+                  {/* Pending today */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Clock className="h-3.5 w-3.5 text-violet-500" />
+                      <h3 className="text-xs sm:text-sm font-semibold text-foreground">Pendientes hoy</h3>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-violet-50 text-violet-600 font-medium">{pendingToday.length}</span>
+                    </div>
+                    {pendingToday.length === 0 && (
+                      <div className="rounded-2xl bg-card border border-border/50 p-6 text-center">
+                        <CheckCircle2 className="h-5 w-5 text-emerald-400 mx-auto mb-1" />
+                        <p className="text-[10px] sm:text-xs text-muted-foreground">No hay tareas pendientes para hoy</p>
+                      </div>
+                    )}
+                    {pendingToday.map((task) => {
+                      const StatusIcon = statusConfig[task.status].icon;
+                      return (
+                        <div key={task.id} onClick={() => setTaskToComplete(task)} className="group rounded-2xl bg-card border border-border/50 p-3 sm:p-4 hover:shadow-md transition-all duration-200 cursor-pointer">
+                          <div className="flex items-start gap-2.5 sm:gap-3">
+                            <div className={cn("mt-0.5 shrink-0", statusConfig[task.status].color)}>
+                              <StatusIcon className={cn("h-4 w-4 sm:h-5 sm:w-5", task.status === "in_progress" && "animate-spin")} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs sm:text-sm font-medium">{task.title}</p>
+                              {task.description && <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 line-clamp-1">{task.description}</p>}
+                              <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                                {task.recurrence !== "none" && (
+                                  <span className={cn("text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full flex items-center gap-0.5", recurrenceColors[task.recurrence])}>
+                                    <Repeat className="h-2 w-2 sm:h-2.5 sm:w-2.5" />{recurrenceLabels[task.recurrence]}{task.recurrence === "weekly_specific" && task.weekDay != null ? ` (${weekDayLabels[task.weekDay] || ""})` : ""}
+                                  </span>
+                                )}
+                                <span className={cn("text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full", priorityConfig[task.priority].color)}>{priorityConfig[task.priority].label}</span>
+                                {task.observations && task.observations.length > 0 && (
+                                  <span className="text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-violet-50 text-violet-500 flex items-center gap-0.5">
+                                    <MessageSquare className="h-2 w-2 sm:h-2.5 sm:w-2.5" />{task.observations.length}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className={cn("text-xs sm:text-sm font-medium", task.status === "done" && "line-through text-muted-foreground")}>{task.title}</p>
-                          {task.description && <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 line-clamp-1">{task.description}</p>}
-                          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                            {task.recurrence !== "none" && (
-                              <span className={cn("text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full flex items-center gap-0.5", recurrenceColors[task.recurrence])}>
-                                <Repeat className="h-2 w-2 sm:h-2.5 sm:w-2.5" />{recurrenceLabels[task.recurrence]}{task.recurrence === "weekly_specific" && task.weekDay != null ? ` (${weekDayLabels[task.weekDay] || ""})` : ""}
-                              </span>
-                            )}
-                            <span className={cn("text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full", priorityConfig[task.priority].color)}>{priorityConfig[task.priority].label}</span>
-                            <span className="flex items-center gap-0.5 text-[10px] sm:text-[11px] text-muted-foreground ml-auto">
-                              <Calendar className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                              {new Date(task.dueDate).toLocaleDateString("es", { day: "2-digit", month: "short" })}
-                            </span>
-                            {task.observations && task.observations.length > 0 && (
-                              <span className="text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-violet-50 text-violet-500 flex items-center gap-0.5">
-                                <MessageSquare className="h-2 w-2 sm:h-2.5 sm:w-2.5" />{task.observations.length}
-                              </span>
-                            )}
+                      );
+                    })}
+                  </div>
+
+                  {/* Done today */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 mb-1">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                      <h3 className="text-xs sm:text-sm font-semibold text-foreground">Realizadas hoy</h3>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 font-medium">{doneToday.length}</span>
+                    </div>
+                    {doneToday.length === 0 && (
+                      <div className="rounded-2xl bg-card border border-border/50 p-6 text-center">
+                        <Circle className="h-5 w-5 text-muted-foreground/30 mx-auto mb-1" />
+                        <p className="text-[10px] sm:text-xs text-muted-foreground">Aun no has completado tareas hoy</p>
+                      </div>
+                    )}
+                    {doneToday.map((task) => (
+                      <div key={task.id} onClick={() => setTaskToComplete(task)} className="group rounded-2xl bg-card border border-emerald-100 p-3 sm:p-4 hover:shadow-md transition-all duration-200 cursor-pointer opacity-75">
+                        <div className="flex items-start gap-2.5 sm:gap-3">
+                          <div className="mt-0.5 shrink-0 text-emerald-500">
+                            <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs sm:text-sm font-medium line-through text-muted-foreground">{task.title}</p>
+                            <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                              <span className={cn("text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full", priorityConfig[task.priority].color)}>{priorityConfig[task.priority].label}</span>
+                              {task.completionComment && (
+                                <span className="text-[9px] sm:text-[10px] text-muted-foreground truncate max-w-[150px]">{task.completionComment}</span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                /* Filtered list (Pendientes, En curso, Todas completadas) */
+                <div className="space-y-2">
+                  {displayTasks.length === 0 && (
+                    <div className="rounded-2xl bg-card border border-border/50 p-6 sm:p-8 text-center">
+                      <p className="text-xs sm:text-sm text-muted-foreground">No hay tareas en esta categoria</p>
                     </div>
-                  );
-                })}
-              </div>
+                  )}
+                  {displayTasks.map((task) => {
+                    const StatusIcon = statusConfig[task.status].icon;
+                    return (
+                      <div key={task.id} onClick={() => setTaskToComplete(task)} className={cn("group rounded-2xl bg-card border border-border/50 p-3 sm:p-4 hover:shadow-md transition-all duration-200 cursor-pointer", task.status === "done" && "opacity-60")}>
+                        <div className="flex items-start gap-2.5 sm:gap-3">
+                          <div className={cn("mt-0.5 shrink-0", statusConfig[task.status].color)}>
+                            <StatusIcon className={cn("h-4 w-4 sm:h-5 sm:w-5", task.status === "in_progress" && "animate-spin")} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className={cn("text-xs sm:text-sm font-medium", task.status === "done" && "line-through text-muted-foreground")}>{task.title}</p>
+                            {task.description && <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 line-clamp-1">{task.description}</p>}
+                            <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                              {task.recurrence !== "none" && (
+                                <span className={cn("text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full flex items-center gap-0.5", recurrenceColors[task.recurrence])}>
+                                  <Repeat className="h-2 w-2 sm:h-2.5 sm:w-2.5" />{recurrenceLabels[task.recurrence]}{task.recurrence === "weekly_specific" && task.weekDay != null ? ` (${weekDayLabels[task.weekDay] || ""})` : ""}
+                                </span>
+                              )}
+                              <span className={cn("text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full", priorityConfig[task.priority].color)}>{priorityConfig[task.priority].label}</span>
+                              <span className="flex items-center gap-0.5 text-[10px] sm:text-[11px] text-muted-foreground ml-auto">
+                                <Calendar className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                                {new Date(task.dueDate).toLocaleDateString("es", { day: "2-digit", month: "short" })}
+                              </span>
+                              {task.observations && task.observations.length > 0 && (
+                                <span className="text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-violet-50 text-violet-500 flex items-center gap-0.5">
+                                  <MessageSquare className="h-2 w-2 sm:h-2.5 sm:w-2.5" />{task.observations.length}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </>
         )}
