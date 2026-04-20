@@ -50,7 +50,7 @@ export default function CobrosPage() {
   const { companies } = useCompanies();
 
   const [mainTab, setMainTab] = useState<MainTab>("cuentas");
-  const [arFilter, setArFilter] = useState<ARFilter>("all");
+  const [arFilter, setArFilter] = useState<ARFilter>("pending");
   const [loanFilter, setLoanFilter] = useState<LoanFilter>("all");
   const [showNewAR, setShowNewAR] = useState(false);
   const [showNewLoan, setShowNewLoan] = useState(false);
@@ -97,7 +97,7 @@ export default function CobrosPage() {
   const totalRepaid = loans.reduce((sum, l) => sum + l.amountPaid, 0);
   const pendingLoansCount = loans.filter((l) => l.status !== "paid").length;
 
-  const filteredAR = arFilter === "all" ? accounts : accounts.filter((ar) => ar.status === arFilter);
+  const filteredAR = arFilter === "all" ? accounts : arFilter === "pending" ? accounts.filter((ar) => ar.status !== "paid") : accounts.filter((ar) => ar.status === arFilter);
   const filteredLoans = loanFilter === "all" ? loans : loans.filter((l) => l.status === loanFilter);
 
   const handleCreateAR = async () => {
@@ -323,7 +323,7 @@ export default function CobrosPage() {
           {/* Filters + Add button */}
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <div className="flex gap-1 flex-wrap">
-              {(["all", "pending", "partial", "overdue", "paid"] as const).map((f) => (
+              {(["pending", "all", "overdue", "paid"] as const).map((f) => (
                 <button
                   key={f}
                   onClick={() => setArFilter(f)}
@@ -332,9 +332,9 @@ export default function CobrosPage() {
                     arFilter === f ? "bg-primary text-primary-foreground" : "bg-muted/50 text-muted-foreground hover:bg-muted"
                   )}
                 >
-                  {f === "all" ? "Todas" : arStatusConfig[f].label}
+                  {f === "pending" ? "Activas" : f === "all" ? "Todas" : arStatusConfig[f].label}
                   <span className="ml-1 opacity-70">
-                    {f === "all" ? accounts.length : accounts.filter((a) => a.status === f).length}
+                    {f === "all" ? accounts.length : f === "pending" ? accounts.filter((a) => a.status !== "paid").length : accounts.filter((a) => a.status === f).length}
                   </span>
                 </button>
               ))}
