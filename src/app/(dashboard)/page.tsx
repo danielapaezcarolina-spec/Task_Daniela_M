@@ -48,20 +48,18 @@ export default function DashboardPage() {
         <ProgressSection />
       </div>
 
-      {/* Companies | Quick Actions + Recent Tasks - aligned bottom */}
-      <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-3 sm:gap-4 lg:grid-rows-[auto_1fr]">
-        <div className="lg:row-span-2">
+      {/* Companies | Quick Actions + Recent Tasks */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div className="lg:col-span-2">
           <CompanyCards />
         </div>
 
-        <div>
+        <div className="space-y-3">
           <QuickActions
             onNewTask={() => setShowNewTask(true)}
             onNewCompany={() => setShowNewCompany(true)}
           />
-        </div>
-        <div className="min-h-0 overflow-hidden">
-          <RecentTasks stretch />
+          <RecentTasks />
         </div>
       </div>
     </div>

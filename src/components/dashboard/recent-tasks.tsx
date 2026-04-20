@@ -26,7 +26,7 @@ export function RecentTasks({ stretch }: { stretch?: boolean }) {
 
   const recentTasks = tasks
     .filter((t) => t.status !== "done")
-    .slice(0, 5);
+    .slice(0, 3);
 
   const handleChangeStatus = (taskId: string, status: Task["status"], obs?: string) => {
     updateTaskStatus(taskId, status, obs);
