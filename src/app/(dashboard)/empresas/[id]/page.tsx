@@ -80,7 +80,6 @@ export default function EmpresaDetallePage() {
   const [showNewTask, setShowNewTask] = useState(false);
   const [showNewAR, setShowNewAR] = useState(false);
   const [taskToComplete, setTaskToComplete] = useState<Task | null>(null);
-  const [dailySummary, setDailySummary] = useState(company?.sendDailySummary ?? false);
   const [newTask, setNewTask] = useState({ title: "", description: "", priority: "medium" as Task["priority"], recurrence: "none" as RecurrenceType, weekDay: 1, dueDate: new Date().toISOString().split("T")[0] });
   const [newAR, setNewAR] = useState({ concept: "", amount: "", currency: "COP" as "COP" | "USD", dueDate: new Date().toISOString().split("T")[0] });
 
@@ -253,8 +252,7 @@ export default function EmpresaDetallePage() {
                   <p className="text-xs font-medium">Resumen diario</p>
                   <p className="text-[10px] text-muted-foreground leading-none">Al final del día</p>
                 </div>
-                <Switch checked={dailySummary} onCheckedChange={(checked) => {
-                  setDailySummary(checked);
+                <Switch checked={company.sendDailySummary} onCheckedChange={(checked) => {
                   updateCompany(companyId, { sendDailySummary: checked });
                 }} />
               </div>

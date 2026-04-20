@@ -55,9 +55,19 @@ export async function PATCH(req: Request) {
   const company = await prisma.company.update({
     where: { id },
     data,
+    include: {
+      _count: { select: { tasks: true } },
+      tasks: { select: { status: true } },
+    },
   });
 
-  return NextResponse.json(company);
+  return NextResponse.json({
+    ...company,
+    tasksTotal: company._count.tasks,
+    tasksCompleted: company.tasks.filter((t) => t.status === "done").length,
+    tasks: undefined,
+    _count: undefined,
+  });
 }
 
 // DELETE /api/companies
