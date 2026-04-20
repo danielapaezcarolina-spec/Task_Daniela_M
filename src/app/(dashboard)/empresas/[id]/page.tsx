@@ -76,7 +76,7 @@ export default function EmpresaDetallePage() {
   const [resumenResult, setResumenResult] = useState<string | null>(null);
   const [mainTab, setMainTab] = useState<MainTab>("tareas");
   const [filter, setFilter] = useState<FilterStatus>("all");
-  const [arFilter, setArFilter] = useState<ARFilter>("all");
+  const [arFilter, setArFilter] = useState<ARFilter>("pending");
   const [showNewTask, setShowNewTask] = useState(false);
   const [showNewAR, setShowNewAR] = useState(false);
   const [taskToComplete, setTaskToComplete] = useState<Task | null>(null);
@@ -104,7 +104,7 @@ export default function EmpresaDetallePage() {
   const progressCount = companyTasks.filter((t) => t.status === "in_progress").length;
   const doneCount = companyTasks.filter((t) => t.status === "done").length;
 
-  const filteredAR = arFilter === "all" ? companyAR : companyAR.filter((ar) => ar.status === arFilter);
+  const filteredAR = arFilter === "all" ? companyAR : arFilter === "pending" ? companyAR.filter((ar) => ar.status === "pending" || ar.status === "partial" || ar.status === "overdue") : companyAR.filter((ar) => ar.status === arFilter);
   const totalPending = companyAR.filter((ar) => ar.status !== "paid").reduce((sum, ar) => sum + (ar.amount - ar.amountPaid), 0);
   const totalCollected = companyAR.reduce((sum, ar) => sum + ar.amountPaid, 0);
   const overdueCount = companyAR.filter((ar) => ar.status === "overdue").length;
@@ -591,9 +591,8 @@ export default function EmpresaDetallePage() {
               {/* AR Filters */}
               <div className="flex gap-1.5 overflow-x-auto pb-1">
                 {([
+                  { value: "pending", label: "Activas", count: companyAR.filter((ar) => ar.status !== "paid").length },
                   { value: "all", label: "Todas", count: companyAR.length },
-                  { value: "pending", label: "Pendientes", count: companyAR.filter((ar) => ar.status === "pending").length },
-                  { value: "partial", label: "Parciales", count: companyAR.filter((ar) => ar.status === "partial").length },
                   { value: "overdue", label: "Vencidas", count: overdueCount },
                   { value: "paid", label: "Pagadas", count: companyAR.filter((ar) => ar.status === "paid").length },
                 ] as const).map((tab) => (
