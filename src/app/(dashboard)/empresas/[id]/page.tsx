@@ -150,22 +150,22 @@ export default function EmpresaDetallePage() {
     const done = companyTasks.filter((t) => t.status === "done");
     const todayDate = new Date().toLocaleDateString("es", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
-    const formatTask = (t: typeof companyTasks[0]) => {
-      const lastObs = t.observations && t.observations.length > 0
-        ? `\n   📝 ${t.observations[t.observations.length - 1].text}`
-        : "";
-      const prio = t.priority === "high" ? "🔴" : t.priority === "medium" ? "🟡" : "🟢";
-      return `${prio} ${t.title}${lastObs}`;
+    const formatInProgress = (t: typeof companyTasks[0]) => {
+      let line = `- ${t.title}`;
+      if (t.observations && t.observations.length > 0) {
+        line += `\n  - ${t.observations[t.observations.length - 1].text}`;
+      }
+      return line;
     };
 
-    let msg = `📊 *Resumen de ${company.name}*\n`;
+    let msg = `📊 Resumen de ${company.name}\n`;
     msg += `📅 ${todayDate}\n`;
     msg += `━━━━━━━━━━━━━━━━━━\n`;
     if (inProg.length > 0) {
-      msg += `\n🔄 *En progreso (${inProg.length})*\n${inProg.map(formatTask).join("\n")}\n`;
+      msg += `\n🔄 En progreso (${inProg.length})\n\n${inProg.map(formatInProgress).join("\n")}\n`;
     }
     if (done.length > 0) {
-      msg += `\n✅ *Completadas (${done.length})*\n${done.map((t) => `• ${t.title}`).join("\n")}\n`;
+      msg += `\n✅ Completadas (${done.length})\n\n${done.map((t) => `- ${t.title}`).join("\n")}\n`;
     }
     if (inProg.length === 0 && done.length === 0) {
       msg += `\nNo hay novedades para hoy.\n`;
