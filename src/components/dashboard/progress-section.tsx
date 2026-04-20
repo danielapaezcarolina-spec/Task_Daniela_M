@@ -9,9 +9,17 @@ export function ProgressSection() {
   const { tasks } = useTasks();
   const { companies } = useCompanies();
 
-  const totalTasks = tasks.length;
-  const completed = tasks.filter((t) => t.status === "done").length;
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+  const monthTasks = tasks.filter((t) => {
+    const d = new Date(t.dueDate);
+    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  });
+  const totalTasks = monthTasks.length;
+  const completed = monthTasks.filter((t) => t.status === "done").length;
   const percentage = totalTasks > 0 ? Math.round((completed / totalTasks) * 100) : 0;
+  const monthName = now.toLocaleDateString("es", { month: "long" });
 
   return (
     <div className="rounded-2xl bg-card p-4 sm:p-6 shadow-sm border border-border/50">
@@ -43,8 +51,8 @@ export function ProgressSection() {
 
         {/* Company progress */}
         <div className="flex-1 min-w-0">
-          <p className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3">
-            {completed} de {totalTasks} tareas completadas
+          <p className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3 capitalize">
+            {completed} de {totalTasks} en {monthName}
           </p>
 
           <div className="flex items-center gap-2 mb-3 sm:mb-4">
