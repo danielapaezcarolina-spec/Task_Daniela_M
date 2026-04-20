@@ -20,7 +20,7 @@ const priorityLabels = {
   low: "Baja",
 };
 
-export function RecentTasks() {
+export function RecentTasks({ stretch }: { stretch?: boolean }) {
   const { tasks, updateTaskStatus, addObservation, updateTask } = useTasks();
   const [taskToComplete, setTaskToComplete] = useState<Task | null>(null);
 
@@ -35,7 +35,7 @@ export function RecentTasks() {
 
   return (
     <>
-      <div className="rounded-2xl bg-card p-3 sm:p-4 shadow-sm border border-border/50">
+      <div className={cn("rounded-2xl bg-card p-3 sm:p-4 shadow-sm border border-border/50", stretch && "h-full")}>
         <div className="flex items-center justify-between mb-2 sm:mb-3">
           <h3 className="text-[11px] sm:text-xs font-semibold text-foreground">
             Tareas pendientes
