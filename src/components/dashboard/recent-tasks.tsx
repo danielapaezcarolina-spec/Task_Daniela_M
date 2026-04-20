@@ -34,9 +34,9 @@ export function RecentTasks({ stretch }: { stretch?: boolean }) {
   };
 
   return (
-    <div className={cn("flex flex-col", stretch && "h-full")}>
-      <div className={cn("rounded-2xl bg-card p-3 sm:p-4 shadow-sm border border-border/50", stretch && "flex-1 flex flex-col")}>
-        <div className="flex items-center justify-between mb-2 sm:mb-3">
+    <div className={cn(stretch && "flex-1 min-h-0 flex flex-col")}>
+      <div className={cn("rounded-2xl bg-card p-3 sm:p-4 shadow-sm border border-border/50", stretch && "flex-1 min-h-0 flex flex-col overflow-hidden")}>
+        <div className="flex items-center justify-between mb-2 sm:mb-3 shrink-0">
           <h3 className="text-[11px] sm:text-xs font-semibold text-foreground">
             Tareas pendientes
           </h3>
@@ -45,7 +45,7 @@ export function RecentTasks({ stretch }: { stretch?: boolean }) {
           </span>
         </div>
 
-        <div className={cn("space-y-1 sm:space-y-1.5", stretch && "flex-1 overflow-y-auto")}>
+        <div className={cn("space-y-1 sm:space-y-1.5", stretch && "flex-1 min-h-0 overflow-y-auto")}>
           {recentTasks.map((task) => (
             <div
               key={task.id}
