@@ -35,21 +35,21 @@ export function RecentTasks() {
 
   return (
     <>
-      <div className="rounded-2xl bg-card p-4 sm:p-5 shadow-sm border border-border/50">
-        <div className="flex items-center justify-between mb-3 sm:mb-4">
-          <h3 className="text-xs sm:text-sm font-semibold text-foreground">
+      <div className="rounded-2xl bg-card p-3 sm:p-4 shadow-sm border border-border/50">
+        <div className="flex items-center justify-between mb-2 sm:mb-3">
+          <h3 className="text-[11px] sm:text-xs font-semibold text-foreground">
             Tareas pendientes
           </h3>
-          <span className="text-[10px] sm:text-xs text-muted-foreground">
+          <span className="text-[9px] sm:text-[10px] text-muted-foreground">
             {recentTasks.length} pendientes
           </span>
         </div>
 
-        <div className="space-y-2 sm:space-y-3">
+        <div className="space-y-1 sm:space-y-1.5">
           {recentTasks.map((task) => (
             <div
               key={task.id}
-              className="flex items-start gap-2.5 sm:gap-3 rounded-xl p-2.5 sm:p-3 hover:bg-muted/50 transition-colors group"
+              className="flex items-start gap-2 rounded-lg p-2 hover:bg-muted/50 transition-colors group"
             >
               <Checkbox
                 className="mt-0.5 rounded-md border-violet-300 data-[state=checked]:bg-primary data-[state=checked]:border-primary h-4 w-4"
@@ -58,10 +58,10 @@ export function RecentTasks() {
                 }}
               />
               <div className="flex-1 min-w-0">
-                <p className="text-xs sm:text-sm font-medium text-foreground truncate">
+                <p className="text-[11px] sm:text-xs font-medium text-foreground truncate">
                   {task.title}
                 </p>
-                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+                <p className="text-[9px] sm:text-[10px] text-muted-foreground truncate">
                   {task.companyName}
                 </p>
               </div>

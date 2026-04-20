@@ -27,13 +27,13 @@ export function StatsCards() {
       {statItems.map((item) => (
         <div
           key={item.label}
-          className="flex flex-col items-center justify-center rounded-2xl bg-card p-2 sm:p-3 shadow-sm border border-border/50 hover:shadow-md transition-shadow aspect-square max-h-24 w-20"
+          className="flex flex-col items-center justify-center rounded-xl bg-card p-1.5 sm:p-2 shadow-sm border border-border/50 hover:shadow-md transition-shadow aspect-square max-h-[72px] w-[68px] sm:max-h-20 sm:w-[76px]"
         >
-          <div className={`flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-xl mb-1 ${item.bg}`}>
-            <item.icon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${item.color}`} />
+          <div className={`flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-lg mb-0.5 ${item.bg}`}>
+            <item.icon className={`h-3 w-3 sm:h-3.5 sm:w-3.5 ${item.color}`} />
           </div>
-          <span className="text-lg sm:text-xl font-bold text-foreground leading-none">{item.value}</span>
-          <span className="text-[9px] sm:text-[10px] text-muted-foreground mt-0.5">{item.label}</span>
+          <span className="text-base sm:text-lg font-bold text-foreground leading-none">{item.value}</span>
+          <span className="text-[8px] sm:text-[9px] text-muted-foreground mt-0.5">{item.label}</span>
         </div>
       ))}
     </div>

@@ -26,7 +26,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="py-4 sm:py-6 space-y-4 sm:space-y-6">
+    <div className="py-3 sm:py-4 space-y-3 sm:space-y-4">
       <NewTaskDialog
         open={showNewTask}
         onClose={() => setShowNewTask(false)}
@@ -40,20 +40,21 @@ export default function DashboardPage() {
       />
 
       {/* Greeting + Stats | Progress side by side */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <div className="space-y-4 sm:space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+        <div className="space-y-3">
           <Greeting />
           <StatsCards />
         </div>
         <ProgressSection />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+      {/* Companies | Quick Actions + Recent Tasks */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div className="lg:col-span-2">
           <CompanyCards />
         </div>
 
-        <div className="space-y-4 sm:space-y-6">
+        <div className="space-y-3">
           <QuickActions
             onNewTask={() => setShowNewTask(true)}
             onNewCompany={() => setShowNewCompany(true)}

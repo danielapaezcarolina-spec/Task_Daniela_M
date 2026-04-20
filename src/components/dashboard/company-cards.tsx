@@ -18,8 +18,8 @@ export function CompanyCards() {
   const { companies } = useCompanies();
   return (
     <div>
-      <div className="flex items-center justify-between mb-3 sm:mb-4">
-        <h3 className="text-base sm:text-lg font-semibold text-foreground">Empresas activas</h3>
+      <div className="flex items-center justify-between mb-2 sm:mb-3">
+        <h3 className="text-sm sm:text-base font-semibold text-foreground">Empresas activas</h3>
         <Link
           href="/empresas"
           className="text-xs sm:text-sm text-primary hover:text-primary/80 font-medium flex items-center gap-1"
@@ -30,7 +30,7 @@ export function CompanyCards() {
       </div>
 
       {/* Horizontal scroll on mobile, grid on desktop */}
-      <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory -mx-1 px-1 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:overflow-visible sm:pb-0 sm:mx-0 sm:px-0">
+      <div className="flex gap-2.5 overflow-x-auto pb-2 snap-x snap-mandatory -mx-1 px-1 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:overflow-visible sm:pb-0 sm:mx-0 sm:px-0 sm:gap-3">
         {companies.map((company, index) => {
           const style = cardStyles[index % cardStyles.length];
           const now = new Date();
@@ -54,7 +54,7 @@ export function CompanyCards() {
               className="group snap-start shrink-0 w-[160px] sm:w-auto"
             >
               <div className="rounded-2xl bg-card shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
-                <div className={cn("relative h-28 sm:h-36 bg-gradient-to-br flex items-center justify-center overflow-hidden", style.bg)}>
+                <div className={cn("relative h-20 sm:h-24 lg:h-20 xl:h-24 bg-gradient-to-br flex items-center justify-center overflow-hidden", style.bg)}>
                   <span className="absolute top-2 left-2 bg-foreground/80 text-card text-[8px] sm:text-[9px] font-medium px-2 py-0.5 rounded-full backdrop-blur-sm">
                     {monthPending} pendientes
                   </span>
@@ -64,11 +64,11 @@ export function CompanyCards() {
                   <Building2 className="h-10 w-10 sm:h-16 sm:w-16 opacity-[0.07]" />
                 </div>
 
-                <div className="p-2.5 sm:p-3.5">
-                  <h4 className="font-bold text-xs sm:text-sm text-foreground leading-tight mb-0.5 truncate">
+                <div className="p-2 sm:p-2.5">
+                  <h4 className="font-bold text-[11px] sm:text-xs text-foreground leading-tight mb-0.5 truncate">
                     {company.name}
                   </h4>
-                  <p className="text-[9px] sm:text-[10px] text-muted-foreground/60 mb-2 sm:mb-3 capitalize">
+                  <p className="text-[8px] sm:text-[9px] text-muted-foreground/60 mb-1.5 sm:mb-2 capitalize">
                     {monthDone}/{monthTotal} en {monthName}
                   </p>
                   <div className="flex items-center justify-between">

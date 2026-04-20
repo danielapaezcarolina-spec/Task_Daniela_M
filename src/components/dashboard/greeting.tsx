@@ -163,30 +163,27 @@ export function Greeting() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-1">
-        <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+      <div className="flex items-center justify-between mb-0.5">
+        <h1 className="text-lg sm:text-xl font-bold text-foreground">
           {getTimeGreeting()}, Daniela
         </h1>
         <button
           onClick={shuffleQuote}
-          className="p-1.5 rounded-lg hover:bg-muted transition-colors"
+          className="p-1 rounded-lg hover:bg-muted transition-colors"
           title="Otra frase"
         >
-          <RefreshCw className={`h-4 w-4 text-muted-foreground ${spinning ? "animate-spin" : ""}`} />
+          <RefreshCw className={`h-3.5 w-3.5 text-muted-foreground ${spinning ? "animate-spin" : ""}`} />
         </button>
       </div>
 
-      <div className="flex items-start gap-2 mt-1">
-        <Sparkles className="h-3.5 w-3.5 text-emerald-400 shrink-0 mt-0.5" />
+      <div className="flex items-start gap-1.5 mt-0.5">
+        <Sparkles className="h-3 w-3 text-emerald-400 shrink-0 mt-0.5" />
         <div className="min-w-0">
-          <p className="text-xs sm:text-sm text-muted-foreground italic leading-snug">
+          <p className="text-[11px] sm:text-xs text-muted-foreground italic leading-snug line-clamp-2">
             &ldquo;{quote.text}&rdquo;
           </p>
-          <p className="text-[11px] text-emerald-500 font-medium mt-0.5">
+          <p className="text-[10px] text-emerald-500 font-medium mt-0.5">
             — {quote.author}
-          </p>
-          <p className="text-[10px] text-muted-foreground/60 mt-0.5">
-            Daniela, {greeting}
           </p>
         </div>
       </div>

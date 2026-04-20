@@ -22,9 +22,9 @@ export function ProgressSection() {
   const monthName = now.toLocaleDateString("es", { month: "long" });
 
   return (
-    <div className="rounded-2xl bg-card p-4 sm:p-6 shadow-sm border border-border/50">
-      <div className="flex items-center justify-between mb-3 sm:mb-4">
-        <h3 className="text-base sm:text-lg font-semibold text-foreground">Progreso</h3>
+    <div className="rounded-2xl bg-card p-3 sm:p-4 shadow-sm border border-border/50">
+      <div className="flex items-center justify-between mb-2 sm:mb-3">
+        <h3 className="text-sm sm:text-base font-semibold text-foreground">Progreso</h3>
         <Badge
           variant="secondary"
           className="bg-emerald-50 text-emerald-700 border-0 rounded-lg text-[10px]"
@@ -33,9 +33,9 @@ export function ProgressSection() {
         </Badge>
       </div>
 
-      <div className="flex items-center gap-4 sm:gap-8">
+      <div className="flex items-center gap-3 sm:gap-6">
         {/* Percentage circle */}
-        <div className="relative flex h-24 w-24 sm:h-32 sm:w-32 shrink-0 items-center justify-center">
+        <div className="relative flex h-20 w-20 sm:h-24 sm:w-24 shrink-0 items-center justify-center">
           <svg className="h-full w-full -rotate-90" viewBox="0 0 120 120">
             <circle cx="60" cy="60" r="50" fill="none" stroke="#f0ecff" strokeWidth="10" />
             <circle
@@ -45,17 +45,17 @@ export function ProgressSection() {
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-2xl sm:text-3xl font-bold text-foreground">{percentage}%</span>
+            <span className="text-xl sm:text-2xl font-bold text-foreground">{percentage}%</span>
           </div>
         </div>
 
         {/* Company progress */}
         <div className="flex-1 min-w-0">
-          <p className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3 capitalize">
+          <p className="text-[11px] sm:text-xs text-muted-foreground mb-1.5 sm:mb-2 capitalize">
             {completed} de {totalTasks} en {monthName}
           </p>
 
-          <div className="flex items-center gap-2 mb-3 sm:mb-4">
+          <div className="flex items-center gap-2 mb-2 sm:mb-3">
             <Badge className="bg-violet-100 text-violet-700 border-0 rounded-lg hover:bg-violet-200 text-[10px] sm:text-xs">
               {companies.length} empresas
             </Badge>
@@ -63,7 +63,7 @@ export function ProgressSection() {
 
           <div className="flex -space-x-2">
             {companies.slice(0, 4).map((company) => (
-              <Avatar key={company.id} className="h-8 w-8 sm:h-10 sm:w-10 border-2 border-card">
+              <Avatar key={company.id} className="h-7 w-7 sm:h-8 sm:w-8 border-2 border-card">
                 <AvatarFallback className="bg-violet-100 text-violet-700 text-[10px] sm:text-xs font-semibold">
                   {company.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
                 </AvatarFallback>
