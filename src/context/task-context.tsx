@@ -50,6 +50,9 @@ export function TaskProvider({ children }: { children: ReactNode }) {
   }, [refreshTasks]);
 
   const completeTask = useCallback(async (id: string, comment?: string) => {
+    const task = tasks.find((t) => t.id === id);
+    const isRecurring = task && task.recurrence !== "none";
+
     setTasks((prev) =>
       prev.map((t) =>
         t.id === id ? { ...t, status: "done" as const, completedAt: new Date().toISOString().split("T")[0], completionComment: comment } : t
@@ -60,10 +63,17 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       completedAt: new Date().toISOString(),
       completionComment: comment,
       observation: comment || "Tarea completada",
-    }).catch(() => refreshTasks());
-  }, [refreshTasks]);
+    }).catch(() => {});
+
+    if (isRecurring) {
+      await refreshTasks();
+    }
+  }, [tasks, refreshTasks]);
 
   const updateTaskStatus = useCallback(async (id: string, status: Task["status"], observation?: string) => {
+    const task = tasks.find((t) => t.id === id);
+    const isRecurring = task && task.recurrence !== "none";
+
     setTasks((prev) =>
       prev.map((t) => {
         if (t.id !== id) return t;
@@ -78,8 +88,12 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       status,
       completedAt: status === "done" ? new Date().toISOString() : undefined,
       observation: observation || `Estado cambiado a: ${status === "todo" ? "Inicio" : status === "in_progress" ? "En proceso" : "Finalizada"}`,
-    }).catch(() => refreshTasks());
-  }, [refreshTasks]);
+    }).catch(() => {});
+
+    if (isRecurring && status === "done") {
+      await refreshTasks();
+    }
+  }, [tasks, refreshTasks]);
 
   const updateTask = useCallback(async (id: string, updates: Partial<Pick<Task, "title" | "description" | "priority" | "dueDate" | "recurrence">>) => {
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...updates } : t)));
