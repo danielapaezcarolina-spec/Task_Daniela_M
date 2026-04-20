@@ -49,19 +49,19 @@ export default function DashboardPage() {
       </div>
 
       {/* Companies | Quick Actions + Recent Tasks - aligned bottom */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 lg:items-stretch">
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-3 sm:gap-4 lg:grid-rows-[auto_1fr]">
+        <div className="lg:row-span-2">
           <CompanyCards />
         </div>
 
-        <div className="flex flex-col gap-3">
+        <div>
           <QuickActions
             onNewTask={() => setShowNewTask(true)}
             onNewCompany={() => setShowNewCompany(true)}
           />
-          <div className="flex-1 min-h-0">
-            <RecentTasks stretch />
-          </div>
+        </div>
+        <div className="min-h-0 overflow-hidden">
+          <RecentTasks stretch />
         </div>
       </div>
     </div>
