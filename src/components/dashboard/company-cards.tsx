@@ -17,7 +17,7 @@ export function CompanyCards() {
   const { tasks } = useTasks();
   const { companies } = useCompanies();
   return (
-    <div>
+    <div className="h-full flex flex-col">
       <div className="flex items-center justify-between mb-2 sm:mb-3">
         <h3 className="text-sm sm:text-base font-semibold text-foreground">Empresas activas</h3>
         <Link
@@ -30,7 +30,7 @@ export function CompanyCards() {
       </div>
 
       {/* Horizontal scroll on mobile, grid on desktop */}
-      <div className="flex gap-2.5 overflow-x-auto pb-2 snap-x snap-mandatory -mx-1 px-1 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:overflow-visible sm:pb-0 sm:mx-0 sm:px-0 sm:gap-3">
+      <div className="flex-1 flex gap-2.5 overflow-x-auto pb-2 snap-x snap-mandatory -mx-1 px-1 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:overflow-visible sm:pb-0 sm:mx-0 sm:px-0 sm:gap-3 sm:content-start">
         {companies.map((company, index) => {
           const style = cardStyles[index % cardStyles.length];
           const now = new Date();
