@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import type { Task, AccountReceivable } from "@/lib/types";
+import type { Task } from "@/lib/types";
 import { useCompanies } from "@/hooks/use-companies";
 import { useAccountsReceivable } from "@/hooks/use-accounts-receivable";
 import { useTasks } from "@/context/task-context";
@@ -16,7 +16,6 @@ import { NewCompanyDialog } from "@/components/popups/new-company-dialog";
 import { sendWAMessage } from "@/lib/whatsapp-client";
 import {
   ArrowLeft,
-  Building2,
   Phone,
   User,
   Plus,
@@ -29,11 +28,8 @@ import {
   MessageSquare,
   Send,
   X,
-  AlertCircle,
   ChevronDown,
   DollarSign,
-  FileText,
-  TrendingUp,
   Pencil,
   Trash2,
 } from "lucide-react";
@@ -101,7 +97,7 @@ export default function EmpresaDetallePage() {
 
   const today = new Date().toISOString().split("T")[0];
   const todayTasks = companyTasks.filter((t) => t.dueDate && t.dueDate.split("T")[0] === today);
-  const displayTasks = filter === "all" ? todayTasks : filter === "today" ? todayTasks : companyTasks.filter((t) => filter === "done" ? t.status === "done" : t.status === filter);
+  const displayTasks = filter === "all" ? todayTasks : companyTasks.filter((t) => t.status === filter);
   const pendingToday = todayTasks.filter((t) => t.status !== "done");
   const doneToday = todayTasks.filter((t) => t.status === "done");
   const todoCount = companyTasks.filter((t) => t.status === "todo").length;
