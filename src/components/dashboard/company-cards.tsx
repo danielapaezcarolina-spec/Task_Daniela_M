@@ -33,11 +33,19 @@ export function CompanyCards() {
       <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory -mx-1 px-1 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:overflow-visible sm:pb-0 sm:mx-0 sm:px-0">
         {companies.map((company, index) => {
           const style = cardStyles[index % cardStyles.length];
+          const now = new Date();
+          const currentMonth = now.getMonth();
+          const currentYear = now.getFullYear();
           const companyTasks = tasks.filter((t) => t.companyId === company.id);
-          const pending = companyTasks.filter((t) => t.status !== "done");
-          const progress = company.tasksTotal > 0
-            ? Math.round((company.tasksCompleted / company.tasksTotal) * 100)
-            : 0;
+          const monthTasks = companyTasks.filter((t) => {
+            const d = new Date(t.dueDate);
+            return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+          });
+          const monthTotal = monthTasks.length;
+          const monthDone = monthTasks.filter((t) => t.status === "done").length;
+          const monthPending = monthTotal - monthDone;
+          const progress = monthTotal > 0 ? Math.round((monthDone / monthTotal) * 100) : 0;
+          const monthName = now.toLocaleDateString("es", { month: "long" });
 
           return (
             <Link
@@ -48,7 +56,7 @@ export function CompanyCards() {
               <div className="rounded-2xl bg-card shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
                 <div className={cn("relative h-28 sm:h-36 bg-gradient-to-br flex items-center justify-center overflow-hidden", style.bg)}>
                   <span className="absolute top-2 left-2 bg-foreground/80 text-card text-[8px] sm:text-[9px] font-medium px-2 py-0.5 rounded-full backdrop-blur-sm">
-                    {pending.length} pendientes
+                    {monthPending} pendientes
                   </span>
                   <div className={cn("absolute top-2 right-2 flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-full shadow-sm backdrop-blur-sm", style.iconBg)}>
                     <Building2 className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -60,14 +68,14 @@ export function CompanyCards() {
                   <h4 className="font-bold text-xs sm:text-sm text-foreground leading-tight mb-0.5 truncate">
                     {company.name}
                   </h4>
-                  <p className="text-[9px] sm:text-[10px] text-muted-foreground/60 mb-2 sm:mb-3">
-                    {company.tasksCompleted}/{company.tasksTotal} completadas
+                  <p className="text-[9px] sm:text-[10px] text-muted-foreground/60 mb-2 sm:mb-3 capitalize">
+                    {monthDone}/{monthTotal} en {monthName}
                   </p>
                   <div className="flex items-center justify-between">
                     <span className={cn(
                       "text-[10px] sm:text-[11px] font-bold rounded-full px-2 py-0.5 sm:py-1",
-                      progress >= 67 ? "bg-emerald-100 text-emerald-700" :
-                      progress >= 34 ? "bg-orange-100 text-orange-700" :
+                      progress >= 75 ? "bg-emerald-100 text-emerald-700" :
+                      progress >= 40 ? "bg-orange-100 text-orange-700" :
                       "bg-rose-100 text-rose-700"
                     )}>
                       {progress}%

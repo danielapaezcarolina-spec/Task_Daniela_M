@@ -104,10 +104,19 @@ export default function EmpresasPage() {
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
           {filteredCompanies.map((company, index) => {
             const style = cardStyles[index % cardStyles.length];
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
             const companyTasks = tasks.filter((t) => t.companyId === company.id);
-            const pending = companyTasks.filter((t) => t.status !== "done");
-            const progress = company.tasksTotal > 0
-              ? Math.round((company.tasksCompleted / company.tasksTotal) * 100) : 0;
+            const monthTasks = companyTasks.filter((t) => {
+              const d = new Date(t.dueDate);
+              return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+            });
+            const monthTotal = monthTasks.length;
+            const monthDone = monthTasks.filter((t) => t.status === "done").length;
+            const monthPending = monthTotal - monthDone;
+            const progress = monthTotal > 0 ? Math.round((monthDone / monthTotal) * 100) : 0;
+            const monthName = now.toLocaleDateString("es", { month: "short" });
 
             return (
               <div key={company.id} className="group relative rounded-2xl sm:rounded-3xl bg-card shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
@@ -141,7 +150,7 @@ export default function EmpresasPage() {
                 >
                   <div className={cn("relative h-28 sm:h-40 bg-linear-to-br flex items-center justify-center", style.bg)}>
                     <span className="absolute top-2 left-2 bg-foreground/80 text-card text-[8px] sm:text-[10px] font-medium px-2 py-0.5 rounded-full backdrop-blur-sm">
-                      {pending.length} pendientes
+                      {monthPending} pendientes
                     </span>
                     <div className={cn("absolute top-2 right-2 flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-full shadow-sm backdrop-blur-sm group-hover:opacity-0 transition-opacity", style.iconBg)}>
                       <Building2 className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -151,18 +160,18 @@ export default function EmpresasPage() {
 
                   <div className="p-2.5 sm:p-4">
                     <h4 className="font-bold text-xs sm:text-sm text-foreground leading-tight mb-0.5 truncate">{company.name}</h4>
-                    <p className="text-[9px] sm:text-[11px] text-muted-foreground/60 mb-2 sm:mb-3">{company.rif}</p>
+                    <p className="text-[9px] sm:text-[11px] text-muted-foreground/60 mb-2 sm:mb-3 capitalize">{monthDone}/{monthTotal} en {monthName}</p>
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
                         <span className={cn(
                           "text-[10px] sm:text-[11px] font-bold rounded-full px-2 py-0.5",
-                          progress >= 67 ? "bg-emerald-100 text-emerald-700" :
-                          progress >= 34 ? "bg-orange-100 text-orange-700" :
+                          progress >= 75 ? "bg-emerald-100 text-emerald-700" :
+                          progress >= 40 ? "bg-orange-100 text-orange-700" :
                           "bg-rose-100 text-rose-700"
                         )}>{progress}%</span>
                         <div className="w-10 sm:w-14 h-1 rounded-full bg-muted hidden sm:block">
-                          <div className={cn("h-1 rounded-full transition-all", style.accent)} style={{ width: `${progress}%` }} />
+                          <div className={cn("h-1 rounded-full transition-all", progress >= 75 ? "bg-emerald-400" : progress >= 40 ? "bg-orange-400" : "bg-rose-400")} style={{ width: `${progress}%` }} />
                         </div>
                       </div>
                       <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-foreground text-card group-hover:bg-primary transition-colors">
