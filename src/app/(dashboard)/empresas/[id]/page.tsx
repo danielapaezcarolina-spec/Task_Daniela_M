@@ -161,11 +161,11 @@ export default function EmpresaDetallePage() {
     let msg = `📊 Resumen de ${company.name}\n`;
     msg += `📅 ${todayDate}\n`;
     msg += `━━━━━━━━━━━━━━━━━━\n`;
-    if (inProg.length > 0) {
-      msg += `\n🔄 En progreso (${inProg.length})\n\n${inProg.map(formatInProgress).join("\n")}\n`;
-    }
     if (done.length > 0) {
       msg += `\n✅ Completadas (${done.length})\n\n${done.map((t) => `- ${t.title}`).join("\n")}\n`;
+    }
+    if (inProg.length > 0) {
+      msg += `\n🔄 En progreso (${inProg.length})\n\n${inProg.map(formatInProgress).join("\n")}\n`;
     }
     if (inProg.length === 0 && done.length === 0) {
       msg += `\nNo hay novedades para hoy.\n`;
