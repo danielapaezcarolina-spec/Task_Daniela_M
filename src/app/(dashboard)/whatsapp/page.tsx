@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState, useEffect, useCallback } from "react";
+import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { useTasks } from "@/context/task-context";
 import { useReminders } from "@/context/reminder-context";
-import { getMorningGreeting, getMorningComment, getEveningGreeting, getEveningComment } from "@/lib/wa-templates";
+import { getMorningGreeting, getMorningComment, getEveningGreeting, getEveningComment, getSarcasticNoTaskMessage } from "@/lib/wa-templates";
 import { useCompanies } from "@/hooks/use-companies";
 import { getWAStatus, connectWA, disconnectWA, resetWA, sendWAMessage, sendWAReminder, type WAStatus } from "@/lib/whatsapp-client";
 import { Button } from "@/components/ui/button";
@@ -64,6 +64,7 @@ export default function WhatsAppPage() {
   const [testPhone, setTestPhone] = useState("");
   const [testSending, setTestSending] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
+  const sarcasticSentRef = useRef(false);
 
   // Poll WhatsApp status
   const fetchStatus = useCallback(async () => {
@@ -80,6 +81,38 @@ export default function WhatsAppPage() {
     const interval = setInterval(fetchStatus, 3000);
     return () => clearInterval(interval);
   }, [fetchStatus]);
+
+  // --- TRIGGER: Mensaje sarcástico si no tiene NINGUNA tarea asignada (L-V) ---
+  useEffect(() => {
+    if (waStatus.status !== "connected") return;
+    if (sarcasticSentRef.current) return;
+
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0=Dom, 6=Sab
+    const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
+    if (!isWeekday) return;
+
+    // Check localStorage to avoid sending multiple times per day
+    const todayKey = `sarcastic-sent-${today.toISOString().split("T")[0]}`;
+    if (typeof window !== "undefined" && localStorage.getItem(todayKey)) return;
+
+    // Check if there are ZERO tasks assigned for today (any status)
+    const todayStr = today.toISOString().split("T")[0];
+    const allTodayTasks = tasks.filter((t) => t.dueDate === todayStr);
+
+    // Only trigger if NO tasks at all are assigned (not if all are completed)
+    if (allTodayTasks.length === 0) {
+      sarcasticSentRef.current = true;
+      if (typeof window !== "undefined") localStorage.setItem(todayKey, "1");
+
+      const sarcasticMsg = getSarcasticNoTaskMessage();
+      sendWAMessage("573242527653", sarcasticMsg).then((sent) => {
+        if (sent) {
+          console.log("[WA] Sarcastic no-task message sent to Daniela");
+        }
+      }).catch(() => {});
+    }
+  }, [waStatus.status, tasks]);
 
   const handleConnect = async () => {
     setLoading(true);
@@ -215,32 +248,50 @@ export default function WhatsAppPage() {
         const companyAllTasks = tasks.filter((t) => t.companyId === company.id);
         const companyPending = companyAllTasks.filter((t) => t.status !== "done");
         const companyDone = companyAllTasks.filter((t) => t.status === "done");
+        const companyInProgress = companyAllTasks.filter((t) => t.status === "in_progress");
         const companyUrgent = companyPending.filter((t) => t.priority === "high");
 
-        let clientMsg = `Resumen para ${company.name}:\n\nEstado general:\n  Completadas: ${companyDone.length}/${companyAllTasks.length}\n  Pendientes: ${companyPending.length}\n  Urgentes: ${companyUrgent.length}`;
+        const dayName = new Date().toLocaleDateString("es", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
-        if (companyPending.length > 0) {
-          clientMsg += `\n\nTareas pendientes:`;
-          companyPending.forEach((t) => {
-            const due = new Date(t.dueDate).toLocaleDateString("es", { day: "2-digit", month: "short" });
-            const priority = t.priority === "high" ? " [Urgente]" : "";
-            const statusLabel = t.status === "in_progress" ? " (en progreso)" : "";
-            clientMsg += `\n  - ${t.title} | Vence: ${due}${priority}${statusLabel}`;
-          });
-        }
+        let clientMsg = `\ud83d\udcca Resumen de ${company.name}\n\ud83d\udcc5 ${dayName}\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501`;
 
+        // COMPLETADAS PRIMERO
         if (companyDone.length > 0) {
-          clientMsg += `\n\nCompletadas recientemente:`;
-          companyDone.slice(0, 3).forEach((t) => {
-            const completedDate = t.completedAt
-              ? new Date(t.completedAt).toLocaleDateString("es", { day: "2-digit", month: "short" })
-              : "-";
-            clientMsg += `\n  - ${t.title} (${completedDate})`;
+          clientMsg += `\n\n\u2705 Completadas (${companyDone.length})\n`;
+          companyDone.forEach((t) => {
+            clientMsg += `\n- ${t.title}`;
             if (t.completionComment) {
-              clientMsg += `\n    Nota: ${t.completionComment}`;
+              clientMsg += `\n  - ${t.completionComment}`;
             }
           });
         }
+
+        // EN PROGRESO / PENDIENTES SEGUNDO
+        if (companyPending.length > 0) {
+          const inProgressTasks = companyPending.filter((t) => t.status === "in_progress");
+          const todoTasks = companyPending.filter((t) => t.status === "todo");
+
+          if (inProgressTasks.length > 0) {
+            clientMsg += `\n\n\ud83d\udd04 En progreso (${inProgressTasks.length})\n`;
+            inProgressTasks.forEach((t) => {
+              clientMsg += `\n- ${t.title}`;
+              if (t.description) {
+                clientMsg += `\n  - ${t.description}`;
+              }
+            });
+          }
+
+          if (todoTasks.length > 0) {
+            clientMsg += `\n\n\u23f3 Pendientes (${todoTasks.length})\n`;
+            todoTasks.forEach((t) => {
+              const due = new Date(t.dueDate).toLocaleDateString("es", { day: "2-digit", month: "short" });
+              const priority = t.priority === "high" ? " \u26a0\ufe0f" : "";
+              clientMsg += `\n- ${t.title} | Vence: ${due}${priority}`;
+            });
+          }
+        }
+
+        clientMsg += `\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501`;
 
         generated.push({
           id: String(++msgId),

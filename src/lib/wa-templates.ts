@@ -172,6 +172,29 @@ const freeDayComments = [
   `\n\nCero tareas hoy Dani! 🙌\n\nRelax total, tú te lo ganaste ✨`,
 ];
 
+// --- MENSAJES SARCÁSTICOS para cuando NO tiene NINGUNA tarea asignada (L-V) ---
+const sarcasticNoTaskMessages = [
+  `Ey Daniela... 👀\n\n¿De verdad hoy no tienes NINGUNA tarea? Un día como hoy, entre semana... ¿y sin nada que hacer? 🤔\n\nRaro, raro, raro... 😏\n\nO eres súper eficiente o algo se nos está escapando 🕵️‍♀️`,
+
+  `Dani... 🧐\n\nRevise tu agenda y... ¿cero tareas? ¿En serio?\n\nO sea, es ${new Date().toLocaleDateString("es", { weekday: "long" })} y tú ahí tan tranquila sin nada pendiente 😤\n\nQue envidia la verdad jajaja 😂💜`,
+
+  `Hola Daniela! 😬\n\nMe asomé a ver qué tienes para hoy y... NADA. Literalmente nada. 0. Zero. Cero. 🫠\n\n¿Contadora sin tareas un día laboral? Eso es como un chef sin cocina 👨‍🍳🚫\n\nAlgo no cuadra aquí... 🤨`,
+
+  `Dani! 🚨\n\nAlerta: Tu lista de tareas para hoy está... *vacía*. Completamente vacía. \n\nNo sé si felicitarte o preocuparme 😅\n\n¿Será que se te olvidó agregar las tareas? Solo digo... 🫣`,
+
+  `Buenos días Daniela ☀️\n\nHoy tengo una noticia impactante: NO TIENES TAREAS 😱\n\nRepito: CERO tareas para ${new Date().toLocaleDateString("es", { weekday: "long" })} 🤯\n\nEsto no se ve todos los días eh... ¿Vacaciones y no me avisaste? 🏖️😂`,
+
+  `Ey Dani 🤭\n\nNo me lo vas a creer pero... hoy no tienes absolutamente NADA que hacer según el sistema \n\n¿La contadora más relajada del mundo? Puede ser... 🧘‍♀️\n\nOjo que si es un error, ¡agrega tus tareas antes de que piense que te jubilaste! 👵😂`,
+
+  `Daniela! 📢\n\nInfome urgente: Tu agenda de hoy tiene más vacío que mi nevera un domingo 🫠\n\n0 tareas. Cero. Nulo. Null. Undefined 😂\n\n¿Qué hacemos con tanto tiempo libre? ¿Aprendemos a tejer? 🧶😏`,
+
+  `Hola Dani! 🙃\n\nAdivina qué... revisé tu día y resulta que es ✨inmaculadamente vacío✨\n\nNi una tarea, ni media, ni un cuarto de tarea \n\nDe verdad un ${new Date().toLocaleDateString("es", { weekday: "long" })} y sin nada... sospechoso 🕵️‍♀️💜`,
+
+  `Dani por favor dime que es un error 😩\n\n¿Cómo es posible que hoy no tengas NADA programado?\n\nEs ${new Date().toLocaleDateString("es", { weekday: "long" })}! ¡DÍA LABORAL! \n\nBueno... disfruta mientras dure porque mañana te cargo el triple 😈💪`,
+
+  `Daniela... tenemos que hablar 😤\n\n(Mentira jajaja 😂)\n\nPero en serio, ¿0 tareas hoy? ¿Nada de nada?\n\nMe siento desempleada como tu asistente 😞\n\nAnda, agrega algo para que yo tenga razón de existir 🥺💜`,
+];
+
 // --- RESUMEN NOCTURNO ---
 const eveningGreetings = [
   `Buenas noches Dani! 🌙\n\nAquí va tu resumen del día:`,
@@ -244,4 +267,8 @@ export function getEveningComment(completedPercent: number): string {
   if (completedPercent >= 80) return pickRandom(eveningGoodDay);
   if (completedPercent >= 40) return pickRandom(eveningOkDay);
   return pickRandom(eveningBadDay);
+}
+
+export function getSarcasticNoTaskMessage(): string {
+  return pickRandom(sarcasticNoTaskMessages);
 }
