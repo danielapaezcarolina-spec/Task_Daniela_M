@@ -59,6 +59,8 @@ interface WhatsAppService {
 const AUTH_DIR = process.env.WHATSAPP_AUTH_DIR || path.join(process.cwd(), ".whatsapp-auth");
 
 let service: WhatsAppService | null = null;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 3;
 
 function cleanPhone(phone: string): string {
   return phone.replace(/[\s\-\+]/g, "");
@@ -115,12 +117,20 @@ function createService(): WhatsAppService {
             svc.qrCode = null;
             svc.socket = null;
           } else {
-            svc.status = "disconnected";
-            setTimeout(() => svc.connect(), 3000);
+            reconnectAttempts++;
+            if (reconnectAttempts <= MAX_RECONNECT_ATTEMPTS) {
+              svc.status = "connecting";
+              setTimeout(() => svc.connect(), 3000);
+            } else {
+              svc.status = "disconnected";
+              svc.socket = null;
+              reconnectAttempts = 0;
+            }
           }
         }
 
         if (connection === "open") {
+          reconnectAttempts = 0;
           svc.status = "connected";
           svc.qrCode = null;
         }
