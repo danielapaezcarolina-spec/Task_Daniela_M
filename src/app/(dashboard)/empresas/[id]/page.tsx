@@ -6,6 +6,7 @@ import type { Task } from "@/lib/types";
 import { useCompanies } from "@/hooks/use-companies";
 import { useAccountsReceivable } from "@/hooks/use-accounts-receivable";
 import { useTasks } from "@/context/task-context";
+import { useReminders } from "@/context/reminder-context";
 import { TaskActionDialog } from "@/components/popups/task-action-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,7 @@ import { NewCompanyDialog } from "@/components/popups/new-company-dialog";
 import { sendWAMessage } from "@/lib/whatsapp-client";
 import {
   ArrowLeft,
+  Bell,
   Phone,
   User,
   Plus,
@@ -64,7 +66,8 @@ export default function EmpresaDetallePage() {
   const params = useParams();
   const router = useRouter();
   const companyId = params.id as string;
-  const { tasks: allTasks, updateTaskStatus, addObservation, updateTask, createTask } = useTasks();
+  const { tasks: allTasks, updateTaskStatus, addObservation, updateTask, createTask, deleteTask } = useTasks();
+  const { addReminder } = useReminders();
   const { companies: companiesList, updateCompany, deleteCompany } = useCompanies();
   const { accounts: companyAR, createAR } = useAccountsReceivable(companyId);
   const company = companiesList.find((c) => c.id === companyId);
@@ -82,6 +85,13 @@ export default function EmpresaDetallePage() {
   const [taskToComplete, setTaskToComplete] = useState<Task | null>(null);
   const [newTask, setNewTask] = useState({ title: "", description: "", priority: "medium" as Task["priority"], recurrence: "none" as RecurrenceType, weekDay: 1, dueDate: new Date().toISOString().split("T")[0] });
   const [newAR, setNewAR] = useState({ concept: "", amount: "", currency: "COP" as "COP" | "USD", dueDate: new Date().toISOString().split("T")[0] });
+  const [enableReminder, setEnableReminder] = useState(false);
+  const [reminderTime, setReminderTime] = useState(() => {
+    const now = new Date();
+    now.setHours(now.getHours() + 1, 0, 0, 0);
+    return now.toISOString().slice(0, 16);
+  });
+  const [reminderRepeat, setReminderRepeat] = useState(true);
 
   if (!company) {
     return (
@@ -119,7 +129,22 @@ export default function EmpresaDetallePage() {
       dueDate: newTask.dueDate,
       companyId,
     });
+
+    if (enableReminder && reminderTime) {
+      addReminder({
+        taskId: "",
+        taskTitle: newTask.title,
+        companyName: company?.name || "",
+        message: newTask.description || newTask.title,
+        scheduledTime: new Date(reminderTime).toISOString(),
+        repeat: reminderRepeat,
+        repeatIntervalMs: 180000,
+        recipientPhone: "+571234567890",
+      });
+    }
+
     setNewTask({ title: "", description: "", priority: "medium", recurrence: "none", weekDay: 1, dueDate: new Date().toISOString().split("T")[0] });
+    setEnableReminder(false);
     setShowNewTask(false);
   };
 
@@ -380,6 +405,50 @@ export default function EmpresaDetallePage() {
                       <Input type="date" value={newTask.dueDate} onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })} className="rounded-xl h-9 text-xs sm:text-sm" />
                     </div>
                   </div>
+
+                  {/* Reminder toggle */}
+                  <button
+                    type="button"
+                    onClick={() => setEnableReminder(!enableReminder)}
+                    className={cn(
+                      "w-full flex items-center gap-2 rounded-xl border p-2.5 transition-all text-left",
+                      enableReminder ? "border-violet-300 bg-violet-50/50" : "border-border/50 hover:border-border"
+                    )}
+                  >
+                    <Bell className={cn("h-4 w-4 shrink-0", enableReminder ? "text-violet-500" : "text-muted-foreground")} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-medium text-foreground">Programar recordatorio</p>
+                      <p className="text-[9px] text-muted-foreground">Te notifica por WhatsApp y en el celular</p>
+                    </div>
+                    <div className={cn("h-5 w-9 rounded-full transition-colors flex items-center px-0.5", enableReminder ? "bg-violet-500" : "bg-muted")}>
+                      <div className={cn("h-4 w-4 rounded-full bg-white shadow-sm transition-transform", enableReminder ? "translate-x-3.5" : "translate-x-0")} />
+                    </div>
+                  </button>
+
+                  {enableReminder && (
+                    <div className="space-y-2 rounded-xl bg-violet-50/30 border border-violet-100 p-2.5 animate-in slide-in-from-top-1 duration-200">
+                      <div className="space-y-1">
+                        <label className="text-[10px] sm:text-[11px] font-medium text-muted-foreground">Hora del recordatorio</label>
+                        <input
+                          type="datetime-local"
+                          value={reminderTime}
+                          onChange={(e) => setReminderTime(e.target.value)}
+                          className="w-full rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 transition-all"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setReminderRepeat(!reminderRepeat)}
+                        className="flex items-center gap-2 w-full"
+                      >
+                        <div className={cn("h-4 w-4 rounded border flex items-center justify-center transition-colors", reminderRepeat ? "bg-violet-500 border-violet-500" : "border-border bg-card")}>
+                          {reminderRepeat && <CheckCircle2 className="h-3 w-3 text-white" />}
+                        </div>
+                        <span className="text-[10px] text-foreground">Repetir cada 3 min hasta completar</span>
+                      </button>
+                    </div>
+                  )}
+
                   <Button onClick={handleCreateTask} className="w-full rounded-full gap-2 h-9 text-xs sm:text-sm">
                     <Plus className="h-3.5 w-3.5" /> Crear Tarea
                   </Button>
@@ -627,9 +696,12 @@ export default function EmpresaDetallePage() {
                               <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 truncate">{ar.concept}</p>
                             </div>
                             <div className="text-right shrink-0">
-                              <p className="text-xs sm:text-sm font-bold">{formatCOP(ar.amount)}</p>
-                              {ar.status === "partial" && (
-                                <p className="text-[10px] text-muted-foreground">Resta: {formatCOP(remaining)}</p>
+                              <p className="text-xs sm:text-sm font-bold text-foreground">{formatCOP(remaining)}</p>
+                              {ar.amountPaid > 0 && (
+                                <div className="mt-0.5">
+                                  <p className="text-[10px] text-muted-foreground line-through">Total: {formatCOP(ar.amount)}</p>
+                                  <p className="text-[10px] font-medium text-emerald-600">Abonado: {formatCOP(ar.amountPaid)}</p>
+                                </div>
                               )}
                             </div>
                           </div>
@@ -678,6 +750,10 @@ export default function EmpresaDetallePage() {
         }}
         onEditTask={(taskId, updates) => {
           updateTask(taskId, updates);
+          setTaskToComplete(null);
+        }}
+        onDeleteTask={(taskId) => {
+          deleteTask(taskId);
           setTaskToComplete(null);
         }}
       />

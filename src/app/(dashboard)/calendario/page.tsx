@@ -47,7 +47,7 @@ const statusIcon: Record<string, { icon: typeof Circle; color: string }> = {
 };
 
 export default function CalendarioPage() {
-  const { tasks, updateTaskStatus, addObservation, updateTask } = useTasks();
+  const { tasks, updateTaskStatus, addObservation, updateTask, deleteTask } = useTasks();
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
@@ -301,6 +301,10 @@ export default function CalendarioPage() {
         }}
         onEditTask={(taskId, updates) => {
           updateTask(taskId, updates);
+          setTaskToComplete(null);
+        }}
+        onDeleteTask={(taskId) => {
+          deleteTask(taskId);
           setTaskToComplete(null);
         }}
       />

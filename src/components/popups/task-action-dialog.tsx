@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Circle, Loader2, CheckCircle2, Pencil, MessageSquarePlus, ArrowRightCircle, X, Calendar, ChevronDown, Bell } from "lucide-react";
+import { Circle, Loader2, CheckCircle2, Pencil, MessageSquarePlus, ArrowRightCircle, X, Bell, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useReminders } from "@/context/reminder-context";
 import type { Task } from "@/lib/types";
@@ -27,9 +27,10 @@ interface TaskActionDialogProps {
   onChangeStatus: (taskId: string, status: Task["status"], observation?: string) => void;
   onAddObservation: (taskId: string, text: string) => void;
   onEditTask: (taskId: string, updates: Partial<Pick<Task, "title" | "description" | "priority" | "dueDate" | "recurrence">>) => void;
+  onDeleteTask?: (taskId: string) => void;
 }
 
-export function TaskActionDialog({ task, open, onClose, onChangeStatus, onAddObservation, onEditTask }: TaskActionDialogProps) {
+export function TaskActionDialog({ task, open, onClose, onChangeStatus, onAddObservation, onEditTask, onDeleteTask }: TaskActionDialogProps) {
   const { addReminder } = useReminders();
   const [visible, setVisible] = useState(false);
   const [activeTab, setActiveTab] = useState<ActionTab>("status");
@@ -139,9 +140,19 @@ export function TaskActionDialog({ task, open, onClose, onChangeStatus, onAddObs
             </div>
             <p className="text-[10px] text-muted-foreground">{task.companyName}</p>
           </div>
-          <button onClick={handleClose} className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-muted transition-colors shrink-0">
-            <X className="h-3.5 w-3.5 text-muted-foreground" />
-          </button>
+          <div className="flex items-center gap-1 shrink-0">
+            {onDeleteTask && (
+              <button
+                onClick={() => { onDeleteTask(task.id); handleClose(); }}
+                className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-red-50 transition-colors"
+              >
+                <Trash2 className="h-3.5 w-3.5 text-red-500" />
+              </button>
+            )}
+            <button onClick={handleClose} className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-muted transition-colors">
+              <X className="h-3.5 w-3.5 text-muted-foreground" />
+            </button>
+          </div>
         </div>
 
         {/* Observations history */}

@@ -423,11 +423,14 @@ export default function CobrosPage() {
                       <p className="text-xs text-muted-foreground mt-0.5 ml-6">{ar.concept}</p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="font-bold text-sm">{fmtMoney(ar.amount)}</p>
+                      <p className="font-bold text-sm text-foreground">{fmtMoney(ar.amount - ar.amountPaid)}</p>
                       {ar.amountPaid > 0 && (
-                        <p className="text-[11px] text-emerald-600">Pagado: {fmtMoney(ar.amountPaid)}</p>
+                         <div className="mt-0.5">
+                           <p className="text-[10px] text-muted-foreground line-through">Total: {fmtMoney(ar.amount)}</p>
+                           <p className="text-[10px] font-medium text-emerald-600">Abonado: {fmtMoney(ar.amountPaid)}</p>
+                         </div>
                       )}
-                      <p className="text-[11px] text-muted-foreground flex items-center gap-1 justify-end mt-0.5">
+                      <p className="text-[11px] text-muted-foreground flex items-center gap-1 justify-end mt-1">
                         <Calendar className="h-3 w-3" />
                         {formatDate(ar.dueDate)}
                       </p>
@@ -629,14 +632,14 @@ export default function CobrosPage() {
                       )}
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="font-bold text-sm">{fmtMoney(loan.amount)}</p>
+                      <p className="font-bold text-sm text-foreground">{fmtMoney(loan.amount - loan.amountPaid)}</p>
                       {loan.amountPaid > 0 && (
-                        <p className="text-[11px] text-emerald-600">Devuelto: {fmtMoney(loan.amountPaid)}</p>
+                        <div className="mt-0.5">
+                          <p className="text-[10px] text-muted-foreground line-through">Total: {fmtMoney(loan.amount)}</p>
+                          <p className="text-[10px] font-medium text-emerald-600">Abonado: {fmtMoney(loan.amountPaid)}</p>
+                        </div>
                       )}
-                      {loan.amount - loan.amountPaid > 0 && loan.amountPaid > 0 && (
-                        <p className="text-[11px] text-amber-600">Resta: {fmtMoney(loan.amount - loan.amountPaid)}</p>
-                      )}
-                      <p className="text-[11px] text-muted-foreground flex items-center gap-1 justify-end mt-0.5">
+                      <p className="text-[11px] text-muted-foreground flex items-center gap-1 justify-end mt-1">
                         <Calendar className="h-3 w-3" />
                         {formatDate(loan.loanDate)}
                       </p>

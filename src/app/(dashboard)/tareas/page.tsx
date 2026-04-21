@@ -43,7 +43,7 @@ const statusColors = {
 };
 
 export default function TareasPage() {
-  const { tasks, updateTaskStatus, addObservation, updateTask, createTask } = useTasks();
+  const { tasks, updateTaskStatus, addObservation, updateTask, createTask, deleteTask } = useTasks();
   const { companies } = useCompanies();
   const [searchQuery, setSearchQuery] = useState("");
   const [view, setView] = useState<"list" | "kanban">("list");
@@ -179,6 +179,10 @@ export default function TareasPage() {
         }}
         onEditTask={(taskId, updates) => {
           updateTask(taskId, updates);
+          setTaskToComplete(null);
+        }}
+        onDeleteTask={(taskId) => {
+          deleteTask(taskId);
           setTaskToComplete(null);
         }}
       />

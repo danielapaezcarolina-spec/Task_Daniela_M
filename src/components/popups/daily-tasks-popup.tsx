@@ -42,7 +42,7 @@ interface DailyTasksPopupProps {
 
 export function DailyTasksPopup({ open, onClose }: DailyTasksPopupProps) {
   const router = useRouter();
-  const { tasks, updateTaskStatus, addObservation, updateTask } = useTasks();
+  const { tasks, updateTaskStatus, addObservation, updateTask, deleteTask } = useTasks();
   const [visible, setVisible] = useState(false);
   const [taskToComplete, setTaskToComplete] = useState<Task | null>(null);
 
@@ -260,6 +260,10 @@ export function DailyTasksPopup({ open, onClose }: DailyTasksPopupProps) {
         }}
         onEditTask={(taskId, updates) => {
           updateTask(taskId, updates);
+          setTaskToComplete(null);
+        }}
+        onDeleteTask={(taskId) => {
+          deleteTask(taskId);
           setTaskToComplete(null);
         }}
       />

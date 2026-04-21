@@ -21,7 +21,7 @@ const priorityLabels = {
 };
 
 export function RecentTasks({ stretch }: { stretch?: boolean }) {
-  const { tasks, updateTaskStatus, addObservation, updateTask } = useTasks();
+  const { tasks, updateTaskStatus, addObservation, updateTask, deleteTask } = useTasks();
   const [taskToComplete, setTaskToComplete] = useState<Task | null>(null);
 
   const today = new Date().toISOString().split("T")[0];
@@ -91,6 +91,10 @@ export function RecentTasks({ stretch }: { stretch?: boolean }) {
         }}
         onEditTask={(taskId, updates) => {
           updateTask(taskId, updates);
+          setTaskToComplete(null);
+        }}
+        onDeleteTask={(taskId) => {
+          deleteTask(taskId);
           setTaskToComplete(null);
         }}
       />
