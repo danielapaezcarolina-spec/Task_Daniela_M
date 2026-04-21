@@ -52,7 +52,7 @@ const typeConfig: Record<MessageType, { label: string; icon: typeof FileText; ba
 };
 
 export default function WhatsAppPage() {
-  const { tasks } = useTasks();
+  const { tasks, loading: tasksLoading } = useTasks();
   const { companies } = useCompanies();
   const { firedNotifications } = useReminders();
   const [waStatus, setWaStatus] = useState<WAStatus>({ status: "disconnected", qr: null });
@@ -85,6 +85,7 @@ export default function WhatsAppPage() {
   // --- TRIGGER: Mensaje sarcástico si no tiene NINGUNA tarea asignada (L-V) ---
   useEffect(() => {
     if (waStatus.status !== "connected") return;
+    if (tasksLoading) return; // Wait until tasks are actually fetched
     if (sarcasticSentRef.current) return;
 
     const today = new Date();
@@ -112,7 +113,7 @@ export default function WhatsAppPage() {
         }
       }).catch(() => {});
     }
-  }, [waStatus.status, tasks]);
+  }, [waStatus.status, tasks, tasksLoading]);
 
   const handleConnect = async () => {
     setLoading(true);
