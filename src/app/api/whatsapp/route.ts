@@ -38,12 +38,22 @@ export async function POST(req: Request) {
     }
 
     case "disconnect": {
-      await wa.disconnect();
+      try {
+        await wa.disconnect();
+      } catch (err) {
+        console.error("[WA API] Error during disconnect:", err);
+      }
       return NextResponse.json({ status: "disconnected" });
     }
 
     case "reset": {
-      await wa.resetSession();
+      try {
+        await wa.resetSession();
+      } catch (err) {
+        console.error("[WA API] Error during reset (non-fatal):", err);
+        // Still return success – the intent is to clear the session
+        // and the service already handles errors internally
+      }
       return NextResponse.json({ status: "disconnected" });
     }
 
