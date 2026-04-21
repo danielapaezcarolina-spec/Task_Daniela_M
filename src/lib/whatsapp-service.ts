@@ -262,7 +262,7 @@ function createService(): WhatsAppService {
       try {
         await svc.socket.sendMessage(phoneToJid(params.phone), { text });
 
-        svc.pendingConfirmations.push({
+        const pending: PendingConfirmation = {
           id: confirmId,
           taskId: params.taskId,
           taskTitle: params.taskTitle,
@@ -271,7 +271,21 @@ function createService(): WhatsAppService {
           message: params.message,
           sentAt: new Date().toISOString(),
           status: "waiting",
-        });
+        };
+        svc.pendingConfirmations.push(pending);
+
+        // Auto-repeat every 3 min until confirmed/rejected (max 10 times)
+        let repeatCount = 0;
+        const autoRepeat = setInterval(() => {
+          repeatCount++;
+          if (repeatCount >= 10 || pending.status !== "waiting" || !svc.socket || svc.status !== "connected") {
+            clearInterval(autoRepeat);
+            return;
+          }
+          svc.socket.sendMessage(phoneToJid(params.phone), {
+            text: getFollowUpReminderText(templateParams),
+          }).catch(() => {});
+        }, 180000);
 
         return true;
       } catch (err) {
@@ -405,10 +419,10 @@ function createService(): WhatsAppService {
           ).trim().toLowerCase();
 
           const senderJid = msg.key.remoteJid || "";
-          const senderPhone = senderJid.replace("@s.whatsapp.net", "");
+          const senderPhone = senderJid.split("@")[0].split(":")[0];
 
           const pending = svc.pendingConfirmations.find(
-            (p) => p.status === "waiting" && cleanPhone(p.phone) === senderPhone
+            (p) => p.status === "waiting" && senderPhone.endsWith(cleanPhone(p.phone))
           );
 
           if (!pending) continue;

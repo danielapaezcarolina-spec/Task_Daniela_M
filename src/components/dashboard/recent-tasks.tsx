@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useTasks } from "@/context/task-context";
+import { useReminders } from "@/context/reminder-context";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Bell, X } from "lucide-react";
 import { TaskActionDialog } from "@/components/popups/task-action-dialog";
 import { cn } from "@/lib/utils";
 import type { Task } from "@/lib/types";
@@ -22,6 +24,7 @@ const priorityLabels = {
 
 export function RecentTasks({ stretch }: { stretch?: boolean }) {
   const { tasks, updateTaskStatus, addObservation, updateTask, deleteTask } = useTasks();
+  const { reminders, dismissReminder } = useReminders();
   const [taskToComplete, setTaskToComplete] = useState<Task | null>(null);
 
   const today = new Date().toISOString().split("T")[0];
@@ -62,9 +65,31 @@ export function RecentTasks({ stretch }: { stretch?: boolean }) {
                 <p className="text-[11px] sm:text-xs font-medium text-foreground truncate">
                   {task.title}
                 </p>
-                <p className="text-[9px] sm:text-[10px] text-muted-foreground truncate">
-                  {task.companyName}
-                </p>
+                <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                  <p className="text-[9px] sm:text-[10px] text-muted-foreground truncate">
+                    {task.companyName}
+                  </p>
+                  {(() => {
+                    const taskReminder = reminders.find((r) => r.taskId === task.id && r.status === "pending");
+                    if (!taskReminder) return null;
+                    return (
+                      <span className="group/pill text-[9px] font-medium px-1 py-0.5 rounded-md bg-blue-50 text-blue-600 flex items-center gap-0.5 shrink-0">
+                        <Bell className="h-2 w-2" />
+                        {new Date(taskReminder.scheduledTime).toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit", hour12: true })}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            dismissReminder(taskReminder.id);
+                          }}
+                          className="ml-0.5 opacity-0 group-hover/pill:opacity-100 transition-opacity hover:bg-blue-200/50 rounded-full p-0.5"
+                          title="Cancelar recordatorio"
+                        >
+                          <X className="h-2 w-2" />
+                        </button>
+                      </span>
+                    );
+                  })()}
+                </div>
               </div>
               <Badge
                 variant="secondary"

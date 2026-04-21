@@ -9,12 +9,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { ChevronDown, Bell, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useReminders } from "@/context/reminder-context";
+import { fireNotification, requestNotificationPermission } from "@/lib/notifications";
 import type { Company } from "@/lib/types";
 
 interface NewTaskDialogProps {
   open: boolean;
   onClose: () => void;
-  onCreateTask: (data: { title: string; description?: string; priority: string; recurrence: string; weekDay?: number; dueDate: string; companyId?: string }) => Promise<void>;
+  onCreateTask: (data: { title: string; description?: string; priority: string; recurrence: string; weekDay?: number; dueDate: string; companyId?: string }) => Promise<any>;
   companies?: Company[];
   defaultCompanyId?: string;
 }
@@ -50,7 +51,7 @@ export function NewTaskDialog({ open, onClose, onCreateTask, companies = [], def
     if (!form.title.trim()) return;
     setLoading(true);
     try {
-      await onCreateTask({
+      const createdTask = await onCreateTask({
         title: form.title,
         description: form.description || undefined,
         priority: form.priority,
@@ -60,17 +61,27 @@ export function NewTaskDialog({ open, onClose, onCreateTask, companies = [], def
         companyId: form.companyId || undefined,
       });
 
-      if (enableReminder && reminderTime) {
-        const companyName = companies.find((c) => c.id === form.companyId)?.name || "";
+      if (enableReminder && reminderTime && createdTask) {
+        requestNotificationPermission().then((perm) => {
+          if (perm === "granted") {
+            fireNotification(
+              "✅ Recordatorio programado",
+              `Te avisaremos de "${form.title}" a las ${new Date(reminderTime).toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit", hour12: true })}`
+            );
+          }
+        });
+
+        const selectedCompany = companies.find((c) => c.id === form.companyId);
+        const companyName = selectedCompany?.name || "";
         addReminder({
-          taskId: "",
+          taskId: createdTask.id,
           taskTitle: form.title,
           companyName,
           message: form.description || form.title,
           scheduledTime: new Date(reminderTime).toISOString(),
           repeat: reminderRepeat,
           repeatIntervalMs: 180000,
-          recipientPhone: "+571234567890",
+          recipientPhone: selectedCompany?.phone || "",
         });
       }
 

@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { NewCompanyDialog } from "@/components/popups/new-company-dialog";
 import { sendWAMessage } from "@/lib/whatsapp-client";
+import { fireNotification, requestNotificationPermission } from "@/lib/notifications";
 import {
   ArrowLeft,
   Bell,
@@ -67,7 +68,7 @@ export default function EmpresaDetallePage() {
   const router = useRouter();
   const companyId = params.id as string;
   const { tasks: allTasks, updateTaskStatus, addObservation, updateTask, createTask, deleteTask } = useTasks();
-  const { addReminder } = useReminders();
+  const { addReminder, reminders, dismissReminder } = useReminders();
   const { companies: companiesList, updateCompany, deleteCompany } = useCompanies();
   const { accounts: companyAR, createAR } = useAccountsReceivable(companyId);
   const company = companiesList.find((c) => c.id === companyId);
@@ -120,7 +121,7 @@ export default function EmpresaDetallePage() {
 
   const handleCreateTask = async () => {
     if (!newTask.title.trim()) return;
-    await createTask({
+    const createdTask = await createTask({
       title: newTask.title,
       description: newTask.description,
       priority: newTask.priority,
@@ -130,16 +131,25 @@ export default function EmpresaDetallePage() {
       companyId,
     });
 
-    if (enableReminder && reminderTime) {
+    if (enableReminder && reminderTime && createdTask) {
+      requestNotificationPermission().then((perm) => {
+        if (perm === "granted") {
+          fireNotification(
+            "✅ Recordatorio programado",
+            `Te avisaremos de "${newTask.title}" a las ${new Date(reminderTime).toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit", hour12: true })}`
+          );
+        }
+      });
+
       addReminder({
-        taskId: "",
+        taskId: createdTask.id,
         taskTitle: newTask.title,
         companyName: company?.name || "",
         message: newTask.description || newTask.title,
         scheduledTime: new Date(reminderTime).toISOString(),
         repeat: reminderRepeat,
         repeatIntervalMs: 180000,
-        recipientPhone: "+571234567890",
+        recipientPhone: company?.phone || "",
       });
     }
 
@@ -488,6 +498,7 @@ export default function EmpresaDetallePage() {
                     )}
                     {pendingToday.map((task) => {
                       const StatusIcon = statusConfig[task.status].icon;
+                      const taskReminder = reminders.find((r) => r.taskId === task.id && r.status === "pending");
                       return (
                         <div key={task.id} onClick={() => setTaskToComplete(task)} className="group rounded-2xl bg-card border border-border/50 p-3 sm:p-4 hover:shadow-md transition-all duration-200 cursor-pointer">
                           <div className="flex items-start gap-2.5 sm:gap-3">
@@ -504,6 +515,22 @@ export default function EmpresaDetallePage() {
                                   </span>
                                 )}
                                 <span className={cn("text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full", priorityConfig[task.priority].color)}>{priorityConfig[task.priority].label}</span>
+                                {taskReminder && (
+                                  <span className="group/pill text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 flex items-center gap-0.5">
+                                    <Bell className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
+                                    {new Date(taskReminder.scheduledTime).toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit", hour12: true })}
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        dismissReminder(taskReminder.id);
+                                      }}
+                                      className="ml-0.5 opacity-0 group-hover/pill:opacity-100 transition-opacity hover:bg-blue-200/50 rounded-full p-0.5"
+                                      title="Cancelar recordatorio"
+                                    >
+                                      <X className="h-2.5 w-2.5" />
+                                    </button>
+                                  </span>
+                                )}
                                 {task.observations && task.observations.length > 0 && (
                                   <span className="text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-violet-50 text-violet-500 flex items-center gap-0.5">
                                     <MessageSquare className="h-2 w-2 sm:h-2.5 sm:w-2.5" />{task.observations.length}
@@ -560,6 +587,7 @@ export default function EmpresaDetallePage() {
                   )}
                   {displayTasks.map((task) => {
                     const StatusIcon = statusConfig[task.status].icon;
+                    const taskReminder = reminders.find((r) => r.taskId === task.id && r.status === "pending");
                     return (
                       <div key={task.id} onClick={() => setTaskToComplete(task)} className={cn("group rounded-2xl bg-card border border-border/50 p-3 sm:p-4 hover:shadow-md transition-all duration-200 cursor-pointer", task.status === "done" && "opacity-60")}>
                         <div className="flex items-start gap-2.5 sm:gap-3">
@@ -576,6 +604,24 @@ export default function EmpresaDetallePage() {
                                 </span>
                               )}
                               <span className={cn("text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full", priorityConfig[task.priority].color)}>{priorityConfig[task.priority].label}</span>
+                              
+                              {taskReminder && (
+                                <span className="group/pill text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 flex items-center gap-0.5">
+                                  <Bell className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
+                                  {new Date(taskReminder.scheduledTime).toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit", hour12: true })}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      dismissReminder(taskReminder.id);
+                                    }}
+                                    className="ml-0.5 opacity-0 group-hover/pill:opacity-100 transition-opacity hover:bg-blue-200/50 rounded-full p-0.5"
+                                    title="Cancelar recordatorio"
+                                  >
+                                    <X className="h-2.5 w-2.5" />
+                                  </button>
+                                </span>
+                              )}
+
                               <span className="flex items-center gap-0.5 text-[10px] sm:text-[11px] text-muted-foreground ml-auto">
                                 <Calendar className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                                 {new Date(task.dueDate).toLocaleDateString("es", { day: "2-digit", month: "short" })}
