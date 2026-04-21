@@ -66,6 +66,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ sent });
     }
 
+    case "cancel": {
+      const { taskId } = body;
+      if (!taskId) return NextResponse.json({ error: "taskId required" }, { status: 400 });
+      wa.cancelTaskReminders(taskId);
+      return NextResponse.json({ cancelled: true });
+    }
+
     case "reminder": {
       const { taskId, taskTitle, companyName, phone, message } = body;
       if (!taskId || !phone || !message) {

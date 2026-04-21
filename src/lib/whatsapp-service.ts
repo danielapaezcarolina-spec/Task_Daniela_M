@@ -51,6 +51,7 @@ interface WhatsAppService {
     phone: string;
     message: string;
   }) => Promise<boolean>;
+  cancelTaskReminders: (taskId: string) => void;
   getStatus: () => { status: ConnectionStatus; qr: string | null };
   getPendingConfirmations: () => PendingConfirmation[];
   consumeTaskCompletions: () => TaskCompletion[];
@@ -274,11 +275,11 @@ function createService(): WhatsAppService {
         };
         svc.pendingConfirmations.push(pending);
 
-        // Auto-repeat every 3 min until confirmed/rejected (max 10 times)
+        // Auto-repeat: at +3min and +6min (2 follow-ups max = 3 total sends)
         let repeatCount = 0;
         const autoRepeat = setInterval(() => {
           repeatCount++;
-          if (repeatCount >= 10 || pending.status !== "waiting" || !svc.socket || svc.status !== "connected") {
+          if (repeatCount >= 2 || pending.status !== "waiting" || !svc.socket || svc.status !== "connected") {
             clearInterval(autoRepeat);
             return;
           }
@@ -292,6 +293,12 @@ function createService(): WhatsAppService {
         console.error("Error sending reminder:", err);
         return false;
       }
+    },
+
+    cancelTaskReminders(taskId: string) {
+      svc.pendingConfirmations
+        .filter((p) => p.taskId === taskId && p.status === "waiting")
+        .forEach((p) => { p.status = "confirmed"; });
     },
 
     getStatus() {

@@ -31,6 +31,14 @@ export async function disconnectWA(): Promise<void> {
   });
 }
 
+export async function cancelWAReminders(taskId: string): Promise<void> {
+  await fetch("/api/whatsapp", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "cancel", taskId }),
+  }).catch(() => {});
+}
+
 export async function resetWA(): Promise<void> {
   await fetch("/api/whatsapp", {
     method: "POST",

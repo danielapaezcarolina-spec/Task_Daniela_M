@@ -84,19 +84,14 @@ export function ReminderProvider({ children }: { children: ReactNode }) {
       ...prev,
     ]);
 
-    // If repeat, schedule next
-    if (reminder.repeat) {
-      const intervalId = setTimeout(() => {
-        fireReminder({ ...reminder, status: "pending" });
-      }, reminder.repeatIntervalMs);
-      timersRef.current.set(reminder.id, intervalId);
-    }
+    // Server handles auto-repeat via WhatsApp (3 sends at -3min, 0, +3min)
   }, []);
 
   const scheduleReminder = useCallback((reminder: Reminder) => {
     const now = Date.now();
     const target = new Date(reminder.scheduledTime).getTime();
-    const delay = Math.max(0, target - now);
+    // Fire 3 min before the scheduled time so server can do: -3min, 0min, +3min
+    const delay = Math.max(0, target - now - 180000);
 
     // Clear existing timer
     const existing = timersRef.current.get(reminder.id);

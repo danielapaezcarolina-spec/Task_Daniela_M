@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 import { tasks as tasksApi } from "@/lib/api";
+import { cancelWAReminders } from "@/lib/whatsapp-client";
 import type { Task } from "@/lib/types";
 
 interface TaskContextType {
@@ -90,8 +91,9 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       observation: observation || `Estado cambiado a: ${status === "todo" ? "Inicio" : status === "in_progress" ? "En proceso" : "Finalizada"}`,
     }).catch(() => {});
 
-    if (isRecurring && status === "done") {
-      await refreshTasks();
+    if (status === "done") {
+      cancelWAReminders(id);
+      if (isRecurring) await refreshTasks();
     }
   }, [tasks, refreshTasks]);
 
