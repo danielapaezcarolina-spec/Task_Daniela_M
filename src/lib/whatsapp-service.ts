@@ -201,12 +201,15 @@ function createService(): WhatsAppService {
 
     async resetSession() {
       if (svc.socket) {
-        try { svc.socket.end(undefined); } catch {}
+        try { await svc.socket.logout(); } catch {}
+        try { svc.socket.ws.close(); } catch {}
         svc.socket = null;
       }
-      if (fs.existsSync(AUTH_DIR)) {
-        fs.rmSync(AUTH_DIR, { recursive: true, force: true });
-      }
+      try {
+        if (fs.existsSync(AUTH_DIR)) {
+          fs.rmSync(AUTH_DIR, { recursive: true, force: true });
+        }
+      } catch {}
       svc.status = "disconnected";
       svc.qrCode = null;
       svc.pendingConfirmations = [];

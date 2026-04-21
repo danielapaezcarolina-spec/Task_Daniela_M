@@ -316,10 +316,16 @@ export default function WhatsAppPage() {
                   <span className="hidden sm:inline">Reiniciar sesion</span>
                 </Button>
               ) : (
-                <Button size="sm" className="rounded-full gap-1.5 text-xs h-8 shadow-md shadow-primary/25" onClick={handleConnect} disabled={loading || waStatus.status === "qr"}>
-                  {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <MessageCircle className="h-3 w-3" />}
-                  <span className="hidden sm:inline">Conectar</span>
-                </Button>
+                <>
+                  <Button size="sm" className="rounded-full gap-1.5 text-xs h-8 shadow-md shadow-primary/25" onClick={handleConnect} disabled={loading || waStatus.status === "qr"}>
+                    {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <MessageCircle className="h-3 w-3" />}
+                    <span className="hidden sm:inline">Conectar</span>
+                  </Button>
+                  <Button variant="outline" size="sm" className="rounded-full gap-1.5 text-xs h-8 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={handleReset} disabled={loading}>
+                    <Trash2 className="h-3 w-3" />
+                    <span className="hidden sm:inline">Eliminar sesion</span>
+                  </Button>
+                </>
               )}
             </div>
           </div>
