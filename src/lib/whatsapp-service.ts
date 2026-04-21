@@ -55,7 +55,7 @@ interface WhatsAppService {
   consumeTaskCompletions: () => TaskCompletion[];
 }
 
-const AUTH_DIR = process.env.NODE_ENV === "production" ? "/app/session" : path.join(process.cwd(), ".whatsapp-auth");
+const AUTH_DIR = process.env.WHATSAPP_AUTH_DIR || path.join(process.cwd(), ".whatsapp-auth");
 
 let service: WhatsAppService | null = null;
 
