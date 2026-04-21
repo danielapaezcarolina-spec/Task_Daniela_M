@@ -5,7 +5,7 @@ import { useTasks } from "@/context/task-context";
 import { useReminders } from "@/context/reminder-context";
 import { getMorningGreeting, getMorningComment, getEveningGreeting, getEveningComment } from "@/lib/wa-templates";
 import { useCompanies } from "@/hooks/use-companies";
-import { getWAStatus, connectWA, disconnectWA, sendWAMessage, sendWAReminder, type WAStatus } from "@/lib/whatsapp-client";
+import { getWAStatus, connectWA, disconnectWA, resetWA, sendWAMessage, sendWAReminder, type WAStatus } from "@/lib/whatsapp-client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -26,6 +26,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -93,6 +94,15 @@ export default function WhatsAppPage() {
     setLoading(true);
     try {
       await disconnectWA();
+      setWaStatus({ status: "disconnected", qr: null });
+    } catch { /* */ }
+    setLoading(false);
+  };
+
+  const handleReset = async () => {
+    setLoading(true);
+    try {
+      await resetWA();
       setWaStatus({ status: "disconnected", qr: null });
     } catch { /* */ }
     setLoading(false);
@@ -288,17 +298,30 @@ export default function WhatsAppPage() {
                 </span>
               </div>
             </div>
-            {isConnected ? (
-              <Button variant="outline" size="sm" className="rounded-full gap-1.5 text-xs h-8" onClick={handleDisconnect} disabled={loading}>
-                {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <WifiOff className="h-3 w-3" />}
-                <span className="hidden sm:inline">Desconectar</span>
-              </Button>
-            ) : (
-              <Button size="sm" className="rounded-full gap-1.5 text-xs h-8 shadow-md shadow-primary/25" onClick={handleConnect} disabled={loading || waStatus.status === "qr"}>
-                {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <MessageCircle className="h-3 w-3" />}
-                <span className="hidden sm:inline">Conectar</span>
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {isConnected ? (
+                <>
+                  <Button variant="outline" size="sm" className="rounded-full gap-1.5 text-xs h-8" onClick={handleDisconnect} disabled={loading}>
+                    {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <WifiOff className="h-3 w-3" />}
+                    <span className="hidden sm:inline">Desconectar</span>
+                  </Button>
+                  <Button variant="outline" size="sm" className="rounded-full gap-1.5 text-xs h-8 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={handleReset} disabled={loading}>
+                    <Trash2 className="h-3 w-3" />
+                    <span className="hidden sm:inline">Reiniciar</span>
+                  </Button>
+                </>
+              ) : waStatus.status === "connecting" ? (
+                <Button variant="outline" size="sm" className="rounded-full gap-1.5 text-xs h-8 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={handleReset} disabled={loading}>
+                  {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                  <span className="hidden sm:inline">Reiniciar sesion</span>
+                </Button>
+              ) : (
+                <Button size="sm" className="rounded-full gap-1.5 text-xs h-8 shadow-md shadow-primary/25" onClick={handleConnect} disabled={loading || waStatus.status === "qr"}>
+                  {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <MessageCircle className="h-3 w-3" />}
+                  <span className="hidden sm:inline">Conectar</span>
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* QR Code */}

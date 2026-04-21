@@ -31,6 +31,14 @@ export async function disconnectWA(): Promise<void> {
   });
 }
 
+export async function resetWA(): Promise<void> {
+  await fetch("/api/whatsapp", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "reset" }),
+  });
+}
+
 export async function sendWAMessage(phone: string, message: string): Promise<boolean> {
   const res = await fetch("/api/whatsapp", {
     method: "POST",

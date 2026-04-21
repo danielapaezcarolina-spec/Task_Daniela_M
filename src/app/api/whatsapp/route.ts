@@ -42,6 +42,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ status: "disconnected" });
     }
 
+    case "reset": {
+      await wa.resetSession();
+      return NextResponse.json({ status: "disconnected" });
+    }
+
     case "send": {
       const { phone, message } = body;
       if (!phone || !message) {

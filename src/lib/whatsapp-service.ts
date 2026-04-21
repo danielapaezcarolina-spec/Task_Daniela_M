@@ -42,6 +42,7 @@ interface WhatsAppService {
   taskCompletions: TaskCompletion[];
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
+  resetSession: () => Promise<void>;
   sendMessage: (phone: string, message: string) => Promise<boolean>;
   sendTaskReminder: (params: {
     taskId: string;
@@ -196,6 +197,20 @@ function createService(): WhatsAppService {
       }
       svc.status = "disconnected";
       svc.qrCode = null;
+    },
+
+    async resetSession() {
+      if (svc.socket) {
+        try { svc.socket.end(undefined); } catch {}
+        svc.socket = null;
+      }
+      if (fs.existsSync(AUTH_DIR)) {
+        fs.rmSync(AUTH_DIR, { recursive: true, force: true });
+      }
+      svc.status = "disconnected";
+      svc.qrCode = null;
+      svc.pendingConfirmations = [];
+      svc.taskCompletions = [];
     },
 
     async sendMessage(phone: string, message: string): Promise<boolean> {
