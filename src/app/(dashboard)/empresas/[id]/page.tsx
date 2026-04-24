@@ -15,7 +15,6 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { NewCompanyDialog } from "@/components/popups/new-company-dialog";
 import { sendWAMessage } from "@/lib/whatsapp-client";
-import { fireNotification, requestNotificationPermission } from "@/lib/notifications";
 import {
   ArrowLeft,
   Bell,
@@ -68,7 +67,7 @@ export default function EmpresaDetallePage() {
   const router = useRouter();
   const companyId = params.id as string;
   const { tasks: allTasks, updateTaskStatus, addObservation, updateTask, createTask, deleteTask } = useTasks();
-  const { addReminder, reminders, dismissReminder } = useReminders();
+  const { reminders, dismissReminder } = useReminders();
   const { companies: companiesList, updateCompany, deleteCompany } = useCompanies();
   const { accounts: companyAR, createAR } = useAccountsReceivable(companyId);
   const company = companiesList.find((c) => c.id === companyId);
@@ -86,13 +85,8 @@ export default function EmpresaDetallePage() {
   const [taskToComplete, setTaskToComplete] = useState<Task | null>(null);
   const [newTask, setNewTask] = useState({ title: "", description: "", priority: "medium" as Task["priority"], recurrence: "none" as RecurrenceType, weekDay: 1, dueDate: new Date().toISOString().split("T")[0] });
   const [newAR, setNewAR] = useState({ concept: "", amount: "", currency: "COP" as "COP" | "USD", dueDate: new Date().toISOString().split("T")[0] });
-  const [enableReminder, setEnableReminder] = useState(false);
-  const [reminderTime, setReminderTime] = useState(() => {
-    const now = new Date();
-    now.setHours(now.getHours() + 1, 0, 0, 0);
-    return now.toISOString().slice(0, 16);
-  });
-  const [reminderRepeat, setReminderRepeat] = useState(true);
+  const [enableAutoReminder, setEnableAutoReminder] = useState(false);
+  const [autoReminderTime, setAutoReminderTime] = useState("09:00");
 
   if (!company) {
     return (
@@ -121,7 +115,7 @@ export default function EmpresaDetallePage() {
 
   const handleCreateTask = async () => {
     if (!newTask.title.trim()) return;
-    const createdTask = await createTask({
+    await createTask({
       title: newTask.title,
       description: newTask.description,
       priority: newTask.priority,
@@ -129,32 +123,13 @@ export default function EmpresaDetallePage() {
       weekDay: newTask.recurrence === "weekly_specific" ? newTask.weekDay : undefined,
       dueDate: newTask.dueDate,
       companyId,
+      autoReminder: enableAutoReminder,
+      autoReminderTime: enableAutoReminder ? autoReminderTime : undefined,
     });
 
-    if (enableReminder && reminderTime && createdTask) {
-      requestNotificationPermission().then((perm) => {
-        if (perm === "granted") {
-          fireNotification(
-            "✅ Recordatorio programado",
-            `Te avisaremos de "${newTask.title}" a las ${new Date(reminderTime).toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit", hour12: true })}`
-          );
-        }
-      });
-
-      addReminder({
-        taskId: createdTask.id,
-        taskTitle: newTask.title,
-        companyName: company?.name || "",
-        message: newTask.description || newTask.title,
-        scheduledTime: new Date(reminderTime).toISOString(),
-        repeat: reminderRepeat,
-        repeatIntervalMs: 180000,
-        recipientPhone: company?.phone || "",
-      });
-    }
-
     setNewTask({ title: "", description: "", priority: "medium", recurrence: "none", weekDay: 1, dueDate: new Date().toISOString().split("T")[0] });
-    setEnableReminder(false);
+    setEnableAutoReminder(false);
+    setAutoReminderTime("09:00");
     setShowNewTask(false);
   };
 
@@ -416,46 +391,48 @@ export default function EmpresaDetallePage() {
                     </div>
                   </div>
 
-                  {/* Reminder toggle */}
+                  {/* Auto-reminder toggle */}
                   <button
                     type="button"
-                    onClick={() => setEnableReminder(!enableReminder)}
+                    onClick={() => setEnableAutoReminder(!enableAutoReminder)}
                     className={cn(
                       "w-full flex items-center gap-2 rounded-xl border p-2.5 transition-all text-left",
-                      enableReminder ? "border-violet-300 bg-violet-50/50" : "border-border/50 hover:border-border"
+                      enableAutoReminder ? "border-violet-300 bg-violet-50/50" : "border-border/50 hover:border-border"
                     )}
                   >
-                    <Bell className={cn("h-4 w-4 shrink-0", enableReminder ? "text-violet-500" : "text-muted-foreground")} />
+                    <Bell className={cn("h-4 w-4 shrink-0", enableAutoReminder ? "text-violet-500" : "text-muted-foreground")} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-[11px] font-medium text-foreground">Programar recordatorio</p>
-                      <p className="text-[9px] text-muted-foreground">Te notifica por WhatsApp y en el celular</p>
+                      <p className="text-[11px] font-medium text-foreground">Recordatorio automatico</p>
+                      <p className="text-[9px] text-muted-foreground">WhatsApp notifica segun la recurrencia de la tarea</p>
                     </div>
-                    <div className={cn("h-5 w-9 rounded-full transition-colors flex items-center px-0.5", enableReminder ? "bg-violet-500" : "bg-muted")}>
-                      <div className={cn("h-4 w-4 rounded-full bg-white shadow-sm transition-transform", enableReminder ? "translate-x-3.5" : "translate-x-0")} />
+                    <div className={cn("h-5 w-9 rounded-full transition-colors flex items-center px-0.5", enableAutoReminder ? "bg-violet-500" : "bg-muted")}>
+                      <div className={cn("h-4 w-4 rounded-full bg-white shadow-sm transition-transform", enableAutoReminder ? "translate-x-3.5" : "translate-x-0")} />
                     </div>
                   </button>
 
-                  {enableReminder && (
-                    <div className="space-y-2 rounded-xl bg-violet-50/30 border border-violet-100 p-2.5 animate-in slide-in-from-top-1 duration-200">
+                  {enableAutoReminder && (
+                    <div className="space-y-2.5 rounded-xl bg-violet-50/30 border border-violet-100 p-2.5 animate-in slide-in-from-top-1 duration-200">
                       <div className="space-y-1">
                         <label className="text-[10px] sm:text-[11px] font-medium text-muted-foreground">Hora del recordatorio</label>
                         <input
-                          type="datetime-local"
-                          value={reminderTime}
-                          onChange={(e) => setReminderTime(e.target.value)}
+                          type="time"
+                          value={autoReminderTime}
+                          onChange={(e) => setAutoReminderTime(e.target.value)}
                           className="w-full rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 transition-all"
                         />
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setReminderRepeat(!reminderRepeat)}
-                        className="flex items-center gap-2 w-full"
-                      >
-                        <div className={cn("h-4 w-4 rounded border flex items-center justify-center transition-colors", reminderRepeat ? "bg-violet-500 border-violet-500" : "border-border bg-card")}>
-                          {reminderRepeat && <CheckCircle2 className="h-3 w-3 text-white" />}
-                        </div>
-                        <span className="text-[10px] text-foreground">Repetir cada 3 min hasta completar</span>
-                      </button>
+                      <div className="rounded-lg bg-violet-100/50 px-2.5 py-2 flex items-start gap-2">
+                        <Repeat className="h-3.5 w-3.5 text-violet-500 mt-0.5 shrink-0" />
+                        <p className="text-[10px] text-violet-700 leading-relaxed">
+                          {newTask.recurrence === "none" && `Se enviara una vez el ${new Date(newTask.dueDate + "T12:00").toLocaleDateString("es", { weekday: "long", day: "numeric", month: "short" })}`}
+                          {newTask.recurrence === "daily" && "Se enviara de Lunes a Viernes"}
+                          {newTask.recurrence === "weekly" && "Se enviara de Lunes a Viernes"}
+                          {newTask.recurrence === "weekly_specific" && `Se enviara cada ${weekDayLabels[newTask.weekDay]}`}
+                          {newTask.recurrence === "monthly" && `Se enviara el dia ${new Date(newTask.dueDate + "T12:00").getDate()} de cada mes`}
+                          {" a las "}
+                          <span className="font-semibold">{autoReminderTime}</span>
+                        </p>
+                      </div>
                     </div>
                   )}
 
@@ -515,6 +492,11 @@ export default function EmpresaDetallePage() {
                                   </span>
                                 )}
                                 <span className={cn("text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full", priorityConfig[task.priority].color)}>{priorityConfig[task.priority].label}</span>
+                                {task.autoReminder && task.autoReminderTime && (
+                                  <span className="text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 flex items-center gap-0.5">
+                                    <Bell className="h-2 w-2 sm:h-2.5 sm:w-2.5" />{task.autoReminderTime}
+                                  </span>
+                                )}
                                 {taskReminder && (
                                   <span className="group/pill text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 flex items-center gap-0.5">
                                     <Bell className="h-2 w-2 sm:h-2.5 sm:w-2.5" />

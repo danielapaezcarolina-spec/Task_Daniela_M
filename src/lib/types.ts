@@ -36,6 +36,8 @@ export interface Task {
   createdAt: string;
   completedAt?: string;
   completionComment?: string;
+  autoReminder?: boolean;
+  autoReminderTime?: string;
   observations?: TaskObservation[];
   company?: Company;
 }

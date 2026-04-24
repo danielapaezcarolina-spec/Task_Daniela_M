@@ -12,6 +12,77 @@ import {
   getConfirmationText,
   getRejectionText,
 } from "./wa-templates";
+import { prisma } from "./prisma";
+
+// ---------------------------------------------------------------------------
+// Recurring-task helpers (mirror of tasks/route.ts)
+// ---------------------------------------------------------------------------
+function getNextBusinessDay(from: Date): Date {
+  const next = new Date(from);
+  next.setDate(next.getDate() + 1);
+  while (next.getDay() === 0 || next.getDay() === 6) next.setDate(next.getDate() + 1);
+  return next;
+}
+function getNextWeekday(from: Date, targetDay: number): Date {
+  const next = new Date(from);
+  next.setDate(next.getDate() + 1);
+  while (next.getDay() !== targetDay) next.setDate(next.getDate() + 1);
+  return next;
+}
+function getNextMonthSameDay(from: Date): Date {
+  const next = new Date(from);
+  next.setMonth(next.getMonth() + 1);
+  return next;
+}
+function getNextDueDate(recurrence: string, currentDue: Date, weekDay?: number | null): Date {
+  switch (recurrence) {
+    case "daily": return getNextBusinessDay(currentDue);
+    case "weekly": return getNextBusinessDay(new Date(currentDue.getTime() + 6 * 86400000));
+    case "weekly_specific": return getNextWeekday(currentDue, weekDay ?? 1);
+    case "monthly": return getNextMonthSameDay(currentDue);
+    default: return currentDue;
+  }
+}
+
+/**
+ * Mark a task as done in the DB. For recurring tasks, advances dueDate and resets to "todo".
+ * This is called directly from the WA message handler so it works even if the browser is closed.
+ */
+async function completeTaskInDB(taskId: string): Promise<boolean> {
+  try {
+    const existing = await prisma.task.findUnique({ where: { id: taskId } });
+    if (!existing) {
+      console.warn(`[WA] completeTaskInDB: task ${taskId} not found`);
+      return false;
+    }
+
+    if (existing.recurrence !== "none") {
+      // Recurring: advance dueDate to next occurrence, reset to todo
+      const nextDue = getNextDueDate(existing.recurrence, existing.dueDate, existing.weekDay);
+      await prisma.task.update({
+        where: { id: taskId },
+        data: { completedAt: new Date(), dueDate: nextDue, status: "todo" },
+      });
+      console.log(`[WA] Recurring task ${taskId} completed → next due: ${nextDue.toISOString()}`);
+    } else {
+      // One-off: mark as done
+      await prisma.task.update({
+        where: { id: taskId },
+        data: { completedAt: new Date(), status: "done" },
+      });
+      console.log(`[WA] Task ${taskId} marked as done`);
+    }
+
+    // Add an observation so the history reflects the WA confirmation
+    await prisma.taskObservation.create({
+      data: { text: "Completada via WhatsApp ✅", status: "done", taskId },
+    });
+    return true;
+  } catch (err) {
+    console.error(`[WA] Error completing task ${taskId} in DB:`, err);
+    return false;
+  }
+}
 
 type ConnectionStatus = "disconnected" | "connecting" | "connected" | "qr";
 
@@ -32,6 +103,24 @@ export interface TaskCompletion {
   taskId: string;
   confirmedAt: string;
   viaWhatsApp: true;
+}
+
+/**
+ * Resolve a WhatsApp LID (Linked ID) to an MSISDN (phone number)
+ * using Baileys' internal mapping files in the auth directory.
+ */
+function resolveLid(lid: string): string | null {
+  const mappingPath = path.join(AUTH_DIR, `lid-mapping-${lid}_reverse.json`);
+  if (fs.existsSync(mappingPath)) {
+    try {
+      const content = fs.readFileSync(mappingPath, "utf-8").trim();
+      // Remove quotes if present
+      return content.replace(/^"|"$/g, "");
+    } catch {
+      return null;
+    }
+  }
+  return null;
 }
 
 interface WhatsAppService {
@@ -169,11 +258,145 @@ function createService(): WhatsAppService {
   // Track whether a QR was shown during this connection cycle
   let qrWasShown = false;
 
+  // Map taskId -> set of autoRepeat interval IDs so we can cancel them all on confirmation
+  const taskRepeatTimers = new Map<string, Set<ReturnType<typeof setInterval>>>();
+
+  const PENDING_PATH = path.join(AUTH_DIR, "pending-confirmations.json");
+
+  function savePending(pendings: PendingConfirmation[]) {
+    try {
+      // Only save those that are still waiting (or recently changed to keep context)
+      // Filter out old confirmed/rejected after 1 hour to keep file small
+      const oneHourAgo = Date.now() - 3600000;
+      const toSave = pendings.filter(p => 
+        p.status === "waiting" || new Date(p.sentAt).getTime() > oneHourAgo
+      );
+      fs.writeFileSync(PENDING_PATH, JSON.stringify(toSave, null, 2));
+    } catch (e) {
+      console.warn("[WA] Error saving pending confirmations:", e);
+    }
+  }
+
+  function loadPending(): PendingConfirmation[] {
+    try {
+      if (fs.existsSync(PENDING_PATH)) {
+        const raw = fs.readFileSync(PENDING_PATH, "utf-8");
+        const loaded = JSON.parse(raw) as PendingConfirmation[];
+        console.log(`[WA] Loaded ${loaded.length} pending confirmations from disk`);
+        return loaded;
+      }
+    } catch (e) {
+      console.warn("[WA] Error loading pending confirmations:", e);
+    }
+    return [];
+  }
+
+  function registerTimer(taskId: string, timer: ReturnType<typeof setInterval>) {
+    if (!taskRepeatTimers.has(taskId)) taskRepeatTimers.set(taskId, new Set());
+    taskRepeatTimers.get(taskId)!.add(timer);
+  }
+
+  function cancelTimers(taskId: string) {
+    const timers = taskRepeatTimers.get(taskId);
+    if (timers) {
+      timers.forEach((t) => clearInterval(t));
+      taskRepeatTimers.delete(taskId);
+    }
+  }
+
+  let autoReminderInterval: ReturnType<typeof setInterval> | null = null;
+  let lastCheckedMinute = "";
+
+  async function checkAutoReminders() {
+    if (svc.status !== "connected" || !svc.socket) return;
+
+    const now = new Date();
+    const currentMinute = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+
+    if (currentMinute === lastCheckedMinute) return;
+    lastCheckedMinute = currentMinute;
+
+    const dayOfWeek = now.getDay();
+    const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
+    const todayStr = now.toISOString().split("T")[0];
+
+    try {
+      const tasks = await prisma.task.findMany({
+        where: {
+          autoReminder: true,
+          autoReminderTime: currentMinute,
+          status: { not: "done" },
+        },
+        include: { company: true },
+      });
+
+      for (const task of tasks) {
+        if (!task.company?.phone) continue;
+
+        const completedToday = task.completedAt?.toISOString().split("T")[0] === todayStr;
+        if (completedToday) continue;
+
+        let shouldRemind = false;
+        switch (task.recurrence) {
+          case "daily":
+          case "weekly":
+            shouldRemind = isWeekday;
+            break;
+          case "weekly_specific":
+            shouldRemind = task.weekDay === dayOfWeek;
+            break;
+          case "monthly":
+            shouldRemind = now.getDate() === task.dueDate.getDate();
+            break;
+          case "none":
+            shouldRemind = task.dueDate.toISOString().split("T")[0] === todayStr;
+            break;
+        }
+
+        if (!shouldRemind) continue;
+
+        const alreadyPending = svc.pendingConfirmations.some(
+          (p) => p.taskId === task.id && p.status === "waiting"
+        );
+        if (alreadyPending) continue;
+
+        console.log(`[WA-AUTO] Sending auto-reminder for "${task.title}" to ${task.company.phone}`);
+        svc.sendTaskReminder({
+          taskId: task.id,
+          taskTitle: task.title,
+          companyName: task.company.name,
+          phone: task.company.phone,
+          message: task.description || task.title,
+        }).catch((err) => {
+          console.error(`[WA-AUTO] Error sending reminder for task ${task.id}:`, err);
+        });
+      }
+    } catch (err) {
+      console.error("[WA-AUTO] Error checking auto-reminders:", err);
+    }
+  }
+
+  function startAutoReminderScheduler() {
+    if (autoReminderInterval) return;
+    console.log("[WA-AUTO] Starting auto-reminder scheduler");
+    autoReminderInterval = setInterval(checkAutoReminders, 30_000);
+    checkAutoReminders();
+  }
+
+  function stopAutoReminderScheduler() {
+    if (autoReminderInterval) {
+      clearInterval(autoReminderInterval);
+      autoReminderInterval = null;
+      lastCheckedMinute = "";
+      console.log("[WA-AUTO] Stopped auto-reminder scheduler");
+    }
+  }
+
   const svc: WhatsAppService = {
     status: "disconnected",
     qrCode: null,
     socket: null,
-    pendingConfirmations: [],
+    pendingConfirmations: loadPending(),
     taskCompletions: [],
 
     async connect() {
@@ -189,6 +412,7 @@ function createService(): WhatsAppService {
 
     async disconnect() {
       console.log("[WA] Disconnect requested");
+      stopAutoReminderScheduler();
       if (svc.socket) {
         try {
           await svc.socket.logout();
@@ -204,6 +428,7 @@ function createService(): WhatsAppService {
 
     async resetSession() {
       console.log("[WA] Reset session requested");
+      stopAutoReminderScheduler();
 
       // 1. Close socket without logout (don't try to talk to WA servers for corrupt sessions)
       if (svc.socket) {
@@ -274,19 +499,25 @@ function createService(): WhatsAppService {
           status: "waiting",
         };
         svc.pendingConfirmations.push(pending);
+        savePending(svc.pendingConfirmations);
 
         // Auto-repeat: at +3min and +6min (2 follow-ups max = 3 total sends)
+        // Timer is registered in taskRepeatTimers so it can be cancelled on "si"
         let repeatCount = 0;
         const autoRepeat = setInterval(() => {
           repeatCount++;
+          // Stop if: max repeats reached, task already confirmed/rejected, or no socket
           if (repeatCount >= 2 || pending.status !== "waiting" || !svc.socket || svc.status !== "connected") {
             clearInterval(autoRepeat);
+            taskRepeatTimers.get(params.taskId)?.delete(autoRepeat);
             return;
           }
           svc.socket.sendMessage(phoneToJid(params.phone), {
             text: getFollowUpReminderText(templateParams),
           }).catch(() => {});
         }, 180000);
+
+        registerTimer(params.taskId, autoRepeat);
 
         return true;
       } catch (err) {
@@ -296,9 +527,13 @@ function createService(): WhatsAppService {
     },
 
     cancelTaskReminders(taskId: string) {
+      // Cancel all auto-repeat intervals for this task
+      cancelTimers(taskId);
+      // Mark all waiting confirmations as confirmed
       svc.pendingConfirmations
         .filter((p) => p.taskId === taskId && p.status === "waiting")
         .forEach((p) => { p.status = "confirmed"; });
+      savePending(svc.pendingConfirmations);
     },
 
     getStatus() {
@@ -411,6 +646,7 @@ function createService(): WhatsAppService {
           svc.qrCode = null;
           qrWasShown = false;
           console.log("[WA] Connected successfully!");
+          startAutoReminderScheduler();
         }
       });
 
@@ -426,46 +662,85 @@ function createService(): WhatsAppService {
           ).trim().toLowerCase();
 
           const senderJid = msg.key.remoteJid || "";
-          const senderPhone = senderJid.split("@")[0].split(":")[0];
+          const senderId = senderJid.split("@")[0].split(":")[0];
+          
+          // Try to resolve the identity: could be a phone number or a LID
+          const resolvedPhone = resolveLid(senderId) || senderId;
+
+          console.log(`[WA] Incoming message from ${senderId} (resolved: ${resolvedPhone}): "${text}"`);
 
           const pending = svc.pendingConfirmations.find(
-            (p) => p.status === "waiting" && senderPhone.endsWith(cleanPhone(p.phone))
+            (p) => p.status === "waiting" && resolvedPhone.endsWith(cleanPhone(p.phone))
           );
 
-          if (!pending) continue;
+          if (!pending) {
+            console.log(`[WA] No pending confirmation waiting for ${resolvedPhone} (id: ${senderId})`);
+            continue;
+          }
+
+          console.log(`[WA] Found pending confirmation for task: ${pending.taskTitle}`);
 
           const isYes = ["si", "sí", "yes", "listo", "hecho", "ok", "dale", "ya"].includes(text);
           const isNo = ["no", "aun no", "todavia no", "aún no", "todavía no", "despues", "después"].includes(text);
 
           if (isYes) {
-            pending.status = "confirmed";
+            console.log(`[WA] User said YES for task ${pending.taskId}`);
+            // Cancel ALL timers and pending confirmations for this task
+            cancelTimers(pending.taskId);
+            svc.pendingConfirmations
+              .filter((p) => p.taskId === pending.taskId && p.status === "waiting")
+              .forEach((p) => { p.status = "confirmed"; });
+            savePending(svc.pendingConfirmations);
 
-            svc.taskCompletions.push({
-              taskId: pending.taskId,
-              confirmedAt: new Date().toISOString(),
-              viaWhatsApp: true,
+            // 1. Update DB directly — works even if the browser is closed
+            completeTaskInDB(pending.taskId).then((ok) => {
+              if (ok) {
+                // 2. Push to taskCompletions so the frontend poller refreshes
+                svc.taskCompletions.push({
+                  taskId: pending.taskId,
+                  confirmedAt: new Date().toISOString(),
+                  viaWhatsApp: true,
+                });
+
+                // 3. Respond to Daniela
+                const replyText = getConfirmationText({ taskTitle: pending.taskTitle, companyName: pending.companyName, message: pending.message });
+                console.log(`[WA] Sending confirmation reply: "${replyText.split("\n")[0]}..."`);
+                sock.sendMessage(senderJid, { text: replyText }).catch((err) => {
+                  console.error("[WA] Error sending confirmation message:", err);
+                });
+              } else {
+                console.warn(`[WA] Task ${pending.taskId} not found in DB — skipping confirmation reply`);
+                sock.sendMessage(senderJid, { text: "Esa tarea ya no existe en el sistema. Puede que haya sido eliminada." }).catch(() => {});
+              }
+            }).catch((err) => {
+              console.error(`[WA] Error updating DB for task ${pending.taskId}:`, err);
             });
 
-            sock.sendMessage(senderJid, {
-              text: getConfirmationText({ taskTitle: pending.taskTitle, companyName: pending.companyName, message: pending.message }),
-            }).catch(() => {});
-
           } else if (isNo) {
+            console.log(`[WA] User said NO for task ${pending.taskId}`);
             pending.status = "rejected";
+            savePending(svc.pendingConfirmations);
 
-            sock.sendMessage(senderJid, {
-              text: getRejectionText({ taskTitle: pending.taskTitle, companyName: pending.companyName, message: pending.message }),
-            }).catch(() => {});
+            const rejectionText = getRejectionText({ taskTitle: pending.taskTitle, companyName: pending.companyName, message: pending.message });
+            sock.sendMessage(senderJid, { text: rejectionText }).catch(() => {});
 
-            setTimeout(() => {
-              svc.sendTaskReminder({
-                taskId: pending.taskId,
-                taskTitle: pending.taskTitle,
-                companyName: pending.companyName,
-                phone: pending.phone,
-                message: pending.message,
-              }).catch(() => {});
-            }, 180000);
+            // Re-remind after 3 min (only if no other waiting pending exists for this task)
+            const alreadyWaiting = svc.pendingConfirmations.some(
+              (p) => p.taskId === pending.taskId && p.status === "waiting"
+            );
+            if (!alreadyWaiting) {
+              setTimeout(() => {
+                svc.sendTaskReminder({
+                  taskId: pending.taskId,
+                  taskTitle: pending.taskTitle,
+                  companyName: pending.companyName,
+                  phone: pending.phone,
+                  message: pending.message,
+                }).catch(() => {});
+              }, 180000);
+            }
+          } else {
+            console.log(`[WA] Text "${text}" did not match yes/no pattern`);
           }
         }
       });

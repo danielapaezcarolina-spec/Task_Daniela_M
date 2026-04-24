@@ -11,8 +11,8 @@ interface TaskContextType {
   completeTask: (id: string, comment?: string) => void;
   updateTaskStatus: (id: string, status: Task["status"], observation?: string) => void;
   addObservation: (id: string, text: string) => void;
-  updateTask: (id: string, updates: Partial<Pick<Task, "title" | "description" | "priority" | "dueDate" | "recurrence">>) => void;
-  createTask: (data: { title: string; description?: string; priority?: string; recurrence?: string; weekDay?: number; dueDate: string; companyId?: string }) => Promise<Task>;
+  updateTask: (id: string, updates: Partial<Pick<Task, "title" | "description" | "priority" | "dueDate" | "recurrence" | "autoReminder" | "autoReminderTime">>) => void;
+  createTask: (data: { title: string; description?: string; priority?: string; recurrence?: string; weekDay?: number; dueDate: string; companyId?: string; autoReminder?: boolean; autoReminderTime?: string }) => Promise<Task>;
   deleteTask: (id: string) => Promise<void>;
   refreshTasks: () => Promise<void>;
 }
@@ -51,9 +51,6 @@ export function TaskProvider({ children }: { children: ReactNode }) {
   }, [refreshTasks]);
 
   const completeTask = useCallback(async (id: string, comment?: string) => {
-    const task = tasks.find((t) => t.id === id);
-    const isRecurring = task && task.recurrence !== "none";
-
     setTasks((prev) =>
       prev.map((t) =>
         t.id === id ? { ...t, status: "done" as const, completedAt: new Date().toISOString().split("T")[0], completionComment: comment } : t
@@ -66,10 +63,10 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       observation: comment || "Tarea completada",
     }).catch(() => {});
 
-    if (isRecurring) {
-      await refreshTasks();
-    }
-  }, [tasks, refreshTasks]);
+    // Always refresh: recurring tasks reset to "todo" with a new dueDate server-side,
+    // so we must sync the frontend state after the PATCH resolves.
+    await refreshTasks();
+  }, [refreshTasks]);
 
   const updateTaskStatus = useCallback(async (id: string, status: Task["status"], observation?: string) => {
     const task = tasks.find((t) => t.id === id);
@@ -110,6 +107,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
 
   const deleteTask = useCallback(async (id: string) => {
     setTasks((prev) => prev.filter((t) => t.id !== id));
+    cancelWAReminders(id);
     await tasksApi.delete(id).catch(() => refreshTasks());
   }, [refreshTasks]);
 

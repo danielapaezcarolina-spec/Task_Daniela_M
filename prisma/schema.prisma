@@ -52,6 +52,8 @@ model Task {
   createdAt   DateTime @default(now())
   completedAt DateTime?
   completionComment String?
+  autoReminder      Boolean  @default(false)
+  autoReminderTime  String?  // "HH:mm" format
 
   companyId String?
   company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)

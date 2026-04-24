@@ -11,6 +11,7 @@ import { DailyTasksPopup } from "@/components/popups/daily-tasks-popup";
 import { NotificationToast } from "@/components/notifications/notification-toast";
 import { PermissionBanner } from "@/components/notifications/permission-banner";
 import { WACompletionPoller } from "@/components/notifications/wa-completion-poller";
+import { WAStatusChecker } from "@/components/notifications/wa-status-checker";
 import { registerServiceWorker } from "@/lib/notifications";
 
 export default function DashboardLayout({
@@ -59,6 +60,7 @@ export default function DashboardLayout({
           <DailyTasksPopup open={showDailyPopup} onClose={handleClosePopup} />
           <NotificationToast />
           <WACompletionPoller />
+          <WAStatusChecker />
         </div>
       </ReminderProvider>
     </TaskProvider>

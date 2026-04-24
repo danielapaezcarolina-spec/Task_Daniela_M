@@ -62,6 +62,10 @@ export function DailyTasksPopup({ open, onClose }: DailyTasksPopupProps) {
 
   const todayTasks = tasks.filter((t) => {
     if (t.status === "done") return false;
+
+    // Recurring task already completed today — hide until next occurrence
+    if (t.recurrence !== "none" && t.completedAt?.split("T")[0] === todayStr) return false;
+
     const taskDate = t.dueDate?.split("T")[0];
 
     // Weekly tasks: show Mon-Fri

@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Circle, Loader2, CheckCircle2, Pencil, MessageSquarePlus, ArrowRightCircle, X, Bell, Trash2 } from "lucide-react";
+import { Circle, Loader2, CheckCircle2, Pencil, MessageSquarePlus, ArrowRightCircle, X, Bell, Trash2, Repeat } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useReminders } from "@/context/reminder-context";
 import type { Task } from "@/lib/types";
 
 type ActionTab = "status" | "observation" | "edit";
@@ -20,18 +19,19 @@ const priorityOptions: { value: Task["priority"]; label: string }[] = [
   { value: "low", label: "Baja" },
 ];
 
+const weekDayLabels: Record<number, string> = { 1: "Lunes", 2: "Martes", 3: "Miercoles", 4: "Jueves", 5: "Viernes" };
+
 interface TaskActionDialogProps {
   task: Task | null;
   open: boolean;
   onClose: () => void;
   onChangeStatus: (taskId: string, status: Task["status"], observation?: string) => void;
   onAddObservation: (taskId: string, text: string) => void;
-  onEditTask: (taskId: string, updates: Partial<Pick<Task, "title" | "description" | "priority" | "dueDate" | "recurrence">>) => void;
+  onEditTask: (taskId: string, updates: Partial<Pick<Task, "title" | "description" | "priority" | "dueDate" | "recurrence" | "autoReminder" | "autoReminderTime">>) => void;
   onDeleteTask?: (taskId: string) => void;
 }
 
 export function TaskActionDialog({ task, open, onClose, onChangeStatus, onAddObservation, onEditTask, onDeleteTask }: TaskActionDialogProps) {
-  const { addReminder } = useReminders();
   const [visible, setVisible] = useState(false);
   const [activeTab, setActiveTab] = useState<ActionTab>("status");
   const [observation, setObservation] = useState("");
@@ -41,9 +41,8 @@ export function TaskActionDialog({ task, open, onClose, onChangeStatus, onAddObs
   const [editDescription, setEditDescription] = useState("");
   const [editPriority, setEditPriority] = useState<Task["priority"]>("medium");
   const [editDueDate, setEditDueDate] = useState("");
-  const [enableReminder, setEnableReminder] = useState(false);
-  const [reminderTime, setReminderTime] = useState("");
-  const [reminderRepeat, setReminderRepeat] = useState(true);
+  const [editAutoReminder, setEditAutoReminder] = useState(false);
+  const [editAutoReminderTime, setEditAutoReminderTime] = useState("09:00");
 
   if (open && !visible) {
     setTimeout(() => {
@@ -56,12 +55,8 @@ export function TaskActionDialog({ task, open, onClose, onChangeStatus, onAddObs
         setEditDescription(task.description || "");
         setEditPriority(task.priority);
         setEditDueDate(task.dueDate);
-        setEnableReminder(false);
-        setReminderRepeat(true);
-        // Default reminder time: next hour
-        const now = new Date();
-        now.setHours(now.getHours() + 1, 0, 0, 0);
-        setReminderTime(now.toISOString().slice(0, 16));
+        setEditAutoReminder(task.autoReminder || false);
+        setEditAutoReminderTime(task.autoReminderTime || "09:00");
       }
     }, 10);
   }
@@ -88,18 +83,6 @@ export function TaskActionDialog({ task, open, onClose, onChangeStatus, onAddObs
   const handleAddObservation = () => {
     if (!observation.trim()) return;
     onAddObservation(task.id, observation);
-    if (enableReminder && reminderTime) {
-      addReminder({
-        taskId: task.id,
-        taskTitle: task.title,
-        companyName: task.companyName || "",
-        message: observation,
-        scheduledTime: new Date(reminderTime).toISOString(),
-        repeat: reminderRepeat,
-        repeatIntervalMs: 180000,
-        recipientPhone: "+571234567890",
-      });
-    }
     handleClose();
   };
 
@@ -110,6 +93,8 @@ export function TaskActionDialog({ task, open, onClose, onChangeStatus, onAddObs
       description: editDescription || undefined,
       priority: editPriority,
       dueDate: editDueDate,
+      autoReminder: editAutoReminder,
+      autoReminderTime: editAutoReminder ? editAutoReminderTime : undefined,
     });
     handleClose();
   };
@@ -119,9 +104,17 @@ export function TaskActionDialog({ task, open, onClose, onChangeStatus, onAddObs
 
   const tabs: { value: ActionTab; label: string; icon: typeof Pencil }[] = [
     { value: "status", label: "Estado", icon: ArrowRightCircle },
-    { value: "observation", label: "Observación", icon: MessageSquarePlus },
+    { value: "observation", label: "Observacion", icon: MessageSquarePlus },
     { value: "edit", label: "Editar", icon: Pencil },
   ];
+
+  const getScheduleText = () => {
+    const rec = task.recurrence;
+    if (rec === "daily" || rec === "weekly") return "de Lunes a Viernes";
+    if (rec === "weekly_specific" && task.weekDay != null) return `cada ${weekDayLabels[task.weekDay] || ""}`;
+    if (rec === "monthly") return `el dia ${new Date(task.dueDate + "T12:00").getDate()} de cada mes`;
+    return `el ${new Date(task.dueDate + "T12:00").toLocaleDateString("es", { weekday: "long", day: "numeric", month: "short" })}`;
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -179,7 +172,7 @@ export function TaskActionDialog({ task, open, onClose, onChangeStatus, onAddObs
                           </span>
                         )}
                         {!isStatusChange && i === 0 && (
-                          <span className="text-[8px] font-semibold text-orange-600 bg-orange-50 px-1 py-0.5 rounded">última obs.</span>
+                          <span className="text-[8px] font-semibold text-orange-600 bg-orange-50 px-1 py-0.5 rounded">ultima obs.</span>
                         )}
                       </div>
                       <p className="text-[10px] text-foreground leading-tight">{obs.text}</p>
@@ -246,7 +239,7 @@ export function TaskActionDialog({ task, open, onClose, onChangeStatus, onAddObs
               <textarea
                 value={statusNote}
                 onChange={(e) => setStatusNote(e.target.value)}
-                placeholder="Observación del cambio de estado (opcional)..."
+                placeholder="Observacion del cambio de estado (opcional)..."
                 className="w-full rounded-xl border border-border bg-muted/30 px-3 py-2 text-xs placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 resize-none transition-all"
                 rows={2}
               />
@@ -270,7 +263,7 @@ export function TaskActionDialog({ task, open, onClose, onChangeStatus, onAddObs
           {/* OBSERVATION TAB */}
           {activeTab === "observation" && (
             <div className="space-y-3">
-              <p className="text-[10px] text-muted-foreground">Agrega una observación sin cambiar el estado de la tarea</p>
+              <p className="text-[10px] text-muted-foreground">Agrega una observacion sin cambiar el estado de la tarea</p>
               <textarea
                 value={observation}
                 onChange={(e) => setObservation(e.target.value)}
@@ -279,51 +272,6 @@ export function TaskActionDialog({ task, open, onClose, onChangeStatus, onAddObs
                 rows={2}
                 autoFocus
               />
-
-              {/* Reminder toggle */}
-              <button
-                type="button"
-                onClick={() => setEnableReminder(!enableReminder)}
-                className={cn(
-                  "w-full flex items-center gap-2 rounded-xl border p-2.5 transition-all text-left",
-                  enableReminder ? "border-violet-300 bg-violet-50/50" : "border-border/50 hover:border-border"
-                )}
-              >
-                <Bell className={cn("h-4 w-4 shrink-0", enableReminder ? "text-violet-500" : "text-muted-foreground")} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-[11px] font-medium text-foreground">Programar recordatorio</p>
-                  <p className="text-[9px] text-muted-foreground">Te notifica por WhatsApp y en el celular</p>
-                </div>
-                <div className={cn("h-5 w-9 rounded-full transition-colors flex items-center px-0.5", enableReminder ? "bg-violet-500" : "bg-muted")}>
-                  <div className={cn("h-4 w-4 rounded-full bg-white shadow-sm transition-transform", enableReminder ? "translate-x-3.5" : "translate-x-0")} />
-                </div>
-              </button>
-
-              {/* Reminder options */}
-              {enableReminder && (
-                <div className="space-y-2 rounded-xl bg-violet-50/30 border border-violet-100 p-2.5 animate-in slide-in-from-top-1 duration-200">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-medium text-muted-foreground">Hora del recordatorio</label>
-                    <input
-                      type="datetime-local"
-                      value={reminderTime}
-                      onChange={(e) => setReminderTime(e.target.value)}
-                      className="w-full rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 transition-all"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setReminderRepeat(!reminderRepeat)}
-                    className="flex items-center gap-2 w-full"
-                  >
-                    <div className={cn("h-4 w-4 rounded border flex items-center justify-center transition-colors", reminderRepeat ? "bg-violet-500 border-violet-500" : "border-border bg-card")}>
-                      {reminderRepeat && <CheckCircle2 className="h-3 w-3 text-white" />}
-                    </div>
-                    <span className="text-[10px] text-foreground">Repetir cada 3 min hasta completar</span>
-                  </button>
-                </div>
-              )}
-
               <div className="flex gap-2">
                 <button onClick={handleClose} className="flex-1 rounded-xl border border-border py-2.5 text-xs font-medium text-muted-foreground hover:bg-muted transition-colors">
                   Cancelar
@@ -333,7 +281,7 @@ export function TaskActionDialog({ task, open, onClose, onChangeStatus, onAddObs
                   disabled={!observation.trim()}
                   className={cn("flex-1 rounded-xl py-2.5 text-xs font-medium transition-colors", observation.trim() ? "bg-violet-500 text-white hover:bg-violet-600 shadow-md shadow-violet-200/50" : "bg-muted text-muted-foreground cursor-not-allowed")}
                 >
-                  {enableReminder ? "Guardar y programar" : "Guardar observación"}
+                  Guardar observacion
                 </button>
               </div>
             </div>
@@ -343,7 +291,7 @@ export function TaskActionDialog({ task, open, onClose, onChangeStatus, onAddObs
           {activeTab === "edit" && (
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-medium text-muted-foreground">Título</label>
+                <label className="text-[10px] font-medium text-muted-foreground">Titulo</label>
                 <input
                   type="text"
                   value={editTitle}
@@ -352,7 +300,7 @@ export function TaskActionDialog({ task, open, onClose, onChangeStatus, onAddObs
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[10px] font-medium text-muted-foreground">Descripción</label>
+                <label className="text-[10px] font-medium text-muted-foreground">Descripcion</label>
                 <textarea
                   value={editDescription}
                   onChange={(e) => setEditDescription(e.target.value)}
@@ -376,7 +324,7 @@ export function TaskActionDialog({ task, open, onClose, onChangeStatus, onAddObs
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-medium text-muted-foreground">Fecha límite</label>
+                  <label className="text-[10px] font-medium text-muted-foreground">Fecha limite</label>
                   <input
                     type="date"
                     value={editDueDate}
@@ -385,6 +333,46 @@ export function TaskActionDialog({ task, open, onClose, onChangeStatus, onAddObs
                   />
                 </div>
               </div>
+
+              {/* Auto-reminder toggle */}
+              <button
+                type="button"
+                onClick={() => setEditAutoReminder(!editAutoReminder)}
+                className={cn(
+                  "w-full flex items-center gap-2 rounded-xl border p-2.5 transition-all text-left",
+                  editAutoReminder ? "border-violet-300 bg-violet-50/50" : "border-border/50 hover:border-border"
+                )}
+              >
+                <Bell className={cn("h-4 w-4 shrink-0", editAutoReminder ? "text-violet-500" : "text-muted-foreground")} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11px] font-medium text-foreground">Recordatorio automatico</p>
+                  <p className="text-[9px] text-muted-foreground">WhatsApp notifica segun la recurrencia</p>
+                </div>
+                <div className={cn("h-5 w-9 rounded-full transition-colors flex items-center px-0.5", editAutoReminder ? "bg-violet-500" : "bg-muted")}>
+                  <div className={cn("h-4 w-4 rounded-full bg-white shadow-sm transition-transform", editAutoReminder ? "translate-x-3.5" : "translate-x-0")} />
+                </div>
+              </button>
+
+              {editAutoReminder && (
+                <div className="space-y-2.5 rounded-xl bg-violet-50/30 border border-violet-100 p-2.5 animate-in slide-in-from-top-1 duration-200">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-muted-foreground">Hora del recordatorio</label>
+                    <input
+                      type="time"
+                      value={editAutoReminderTime}
+                      onChange={(e) => setEditAutoReminderTime(e.target.value)}
+                      className="w-full rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-300 transition-all"
+                    />
+                  </div>
+                  <div className="rounded-lg bg-violet-100/50 px-2.5 py-2 flex items-start gap-2">
+                    <Repeat className="h-3.5 w-3.5 text-violet-500 mt-0.5 shrink-0" />
+                    <p className="text-[10px] text-violet-700 leading-relaxed">
+                      Se enviara {getScheduleText()} a las <span className="font-semibold">{editAutoReminderTime}</span>
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <div className="flex gap-2">
                 <button onClick={handleClose} className="flex-1 rounded-xl border border-border py-2.5 text-xs font-medium text-muted-foreground hover:bg-muted transition-colors">
                   Cancelar
