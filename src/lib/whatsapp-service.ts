@@ -157,7 +157,12 @@ const MAX_RECONNECT_ATTEMPTS = 5;
 // ---------------------------------------------------------------------------
 
 function cleanPhone(phone: string): string {
-  return phone.replace(/[\s\-\+]/g, "");
+  let cleaned = phone.replace(/[\s\-\+\(\)]/g, "");
+  // Remove leading zeros
+  cleaned = cleaned.replace(/^0+/, "");
+  // Colombian numbers: if 10 digits starting with 3, add country code
+  if (/^3\d{9}$/.test(cleaned)) cleaned = `57${cleaned}`;
+  return cleaned;
 }
 
 function phoneToJid(phone: string): string {

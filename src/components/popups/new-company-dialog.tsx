@@ -46,7 +46,7 @@ export function NewCompanyDialog({ open, onClose, onCreate, initialData, initial
     try {
       await onCreate({
         ...form,
-        phone: form.phone.startsWith("+57") ? form.phone : `+57${form.phone.replace(/^0+/, "")}`,
+        phone: form.phone,
       }, daysBefore);
       onClose();
     } finally {

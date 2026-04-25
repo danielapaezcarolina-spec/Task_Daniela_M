@@ -452,7 +452,7 @@ export default function WhatsAppPage() {
                         taskId: pendingTask.id,
                         taskTitle: pendingTask.title,
                         companyName: pendingTask.companyName || "Empresa",
-                        phone: testPhone.startsWith("+57") ? testPhone : `+57${testPhone.replace(/^0+/, "")}`,
+                        phone: testPhone,
                         message: "Prueba de recordatorio - Responde 'si' para completar la tarea",
                       });
                       setTestResult(sent ? "Enviado! Responde 'si' en WhatsApp para ver como se tacha la tarea." : "Error al enviar. Verifica la conexion.");
