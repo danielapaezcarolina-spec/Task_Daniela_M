@@ -44,8 +44,11 @@ export const tasks = {
     description?: string;
     priority?: string;
     recurrence?: string;
+    weekDay?: number;
     dueDate: string;
     companyId: string;
+    autoReminder?: boolean;
+    autoReminderTime?: string;
   }) => request<Task>("/api/tasks", { method: "POST", body: JSON.stringify(data) }).then(t => mapTask(t as unknown as Record<string, unknown>)),
 
   update: (id: string, data: Record<string, unknown>) =>

@@ -33,6 +33,8 @@ export async function POST(req: Request) {
       recurrence: body.recurrence || "none",
       weekDay: body.recurrence === "weekly_specific" && body.weekDay != null ? parseInt(body.weekDay) : null,
       dueDate: new Date(body.dueDate),
+      autoReminder: body.autoReminder || false,
+      autoReminderTime: body.autoReminderTime || null,
       ...(body.companyId ? { companyId: body.companyId } : {}),
       userId: session.userId,
     },
