@@ -45,6 +45,11 @@ type RecurrenceType = "none" | "daily" | "weekly" | "weekly_specific" | "monthly
 const recurrenceLabels: Record<RecurrenceType, string> = { none: "Una vez", daily: "Diaria", weekly: "Semanal (L-V)", weekly_specific: "Semanal - Día", monthly: "Mensual" };
 const recurrenceColors: Record<RecurrenceType, string> = { none: "bg-gray-100 text-gray-600", daily: "bg-violet-50 text-violet-600", weekly: "bg-violet-50 text-violet-600", weekly_specific: "bg-violet-50 text-violet-600", monthly: "bg-violet-50 text-violet-600" };
 const weekDayLabels: Record<number, string> = { 1: "Lun", 2: "Mar", 3: "Mié", 4: "Jue", 5: "Vie" };
+function formatTime12h(time: string) {
+  const [h, m] = time.split(":").map(Number);
+  const suffix = h >= 12 ? "PM" : "AM";
+  return `${((h % 12) || 12)}:${m.toString().padStart(2, "0")} ${suffix}`;
+}
 const priorityConfig = {
   high: { label: "Alta", color: "bg-violet-100 text-violet-700", dot: "bg-violet-500" },
   medium: { label: "Media", color: "bg-violet-50 text-violet-600", dot: "bg-violet-400" },
@@ -430,7 +435,7 @@ export default function EmpresaDetallePage() {
                           {newTask.recurrence === "weekly_specific" && `Se enviara cada ${weekDayLabels[newTask.weekDay]}`}
                           {newTask.recurrence === "monthly" && `Se enviara el dia ${new Date(newTask.dueDate + "T12:00").getDate()} de cada mes`}
                           {" a las "}
-                          <span className="font-semibold">{autoReminderTime}</span>
+                          <span className="font-semibold">{formatTime12h(autoReminderTime)}</span>
                         </p>
                       </div>
                     </div>
@@ -494,7 +499,7 @@ export default function EmpresaDetallePage() {
                                 <span className={cn("text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full", priorityConfig[task.priority].color)}>{priorityConfig[task.priority].label}</span>
                                 {task.autoReminder && task.autoReminderTime && (
                                   <span className="text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 flex items-center gap-0.5">
-                                    <Bell className="h-2 w-2 sm:h-2.5 sm:w-2.5" />{task.autoReminderTime}
+                                    <Bell className="h-2 w-2 sm:h-2.5 sm:w-2.5" />{formatTime12h(task.autoReminderTime!)}
                                   </span>
                                 )}
                                 {taskReminder && (

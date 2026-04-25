@@ -21,6 +21,12 @@ const priorityOptions: { value: Task["priority"]; label: string }[] = [
 
 const weekDayLabels: Record<number, string> = { 1: "Lunes", 2: "Martes", 3: "Miercoles", 4: "Jueves", 5: "Viernes" };
 
+function formatTime12h(time: string) {
+  const [h, m] = time.split(":").map(Number);
+  const suffix = h >= 12 ? "PM" : "AM";
+  return `${((h % 12) || 12)}:${m.toString().padStart(2, "0")} ${suffix}`;
+}
+
 interface TaskActionDialogProps {
   task: Task | null;
   open: boolean;
@@ -367,7 +373,7 @@ export function TaskActionDialog({ task, open, onClose, onChangeStatus, onAddObs
                   <div className="rounded-lg bg-violet-100/50 px-2.5 py-2 flex items-start gap-2">
                     <Repeat className="h-3.5 w-3.5 text-violet-500 mt-0.5 shrink-0" />
                     <p className="text-[10px] text-violet-700 leading-relaxed">
-                      Se enviara {getScheduleText()} a las <span className="font-semibold">{editAutoReminderTime}</span>
+                      Se enviara {getScheduleText()} a las <span className="font-semibold">{formatTime12h(editAutoReminderTime)}</span>
                     </p>
                   </div>
                 </div>
