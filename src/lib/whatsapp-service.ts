@@ -371,15 +371,16 @@ function createService(): WhatsAppService {
           console.error(`[WA-AUTO] Error sending reminder for task ${task.id}:`, err);
         });
       }
-    } catch (err) {
-      console.error("[WA-AUTO] Error checking auto-reminders:", err);
+    } catch {
+      console.warn("[WA-AUTO] DB unreachable — will retry next minute");
+      lastCheckedMinute = "";
     }
   }
 
   function startAutoReminderScheduler() {
     if (autoReminderInterval) return;
     console.log("[WA-AUTO] Starting auto-reminder scheduler");
-    autoReminderInterval = setInterval(checkAutoReminders, 30_000);
+    autoReminderInterval = setInterval(checkAutoReminders, 60_000);
     checkAutoReminders();
   }
 
@@ -642,11 +643,14 @@ function createService(): WhatsAppService {
 
         if (connection === "open") {
           reconnectAttempts = 0;
-          svc.status = "connected";
           svc.qrCode = null;
           qrWasShown = false;
-          console.log("[WA] Connected successfully!");
-          startAutoReminderScheduler();
+          console.log("[WA] Connected — waiting for socket to stabilize...");
+          setTimeout(() => {
+            svc.status = "connected";
+            console.log("[WA] Ready to send messages!");
+            startAutoReminderScheduler();
+          }, 3000);
         }
       });
 
@@ -763,6 +767,17 @@ function createService(): WhatsAppService {
 export function getWhatsAppService(): WhatsAppService {
   if (!service) {
     service = createService();
+
+    // Auto-connect if a saved session exists
+    const credsPath = path.join(AUTH_DIR, "creds.json");
+    if (fs.existsSync(credsPath)) {
+      console.log("[WA] Saved session found — auto-connecting...");
+      service.connect().catch((err) => {
+        console.error("[WA] Auto-connect failed:", err);
+      });
+    } else {
+      console.log("[WA] No saved session — waiting for manual connect");
+    }
   }
   return service;
 }
